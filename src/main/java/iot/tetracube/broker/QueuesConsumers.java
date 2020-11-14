@@ -4,6 +4,7 @@ import com.rabbitmq.client.DeliverCallback;
 import io.quarkus.runtime.StartupEvent;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import io.vertx.mutiny.core.eventbus.EventBus;
 import iot.tetracube.config.SmartHubConfig;
 
 import javax.ejb.Singleton;
@@ -18,13 +19,16 @@ public class QueuesConsumers {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(QueuesConsumers.class);
 
+    private final EventBus eventBus;
     private final SmartHubConfig smartHubConfig;
     private final RabbitMQClient rabbitMQClient;
 
     public QueuesConsumers(SmartHubConfig smartHubConfig,
-                           RabbitMQClient rabbitMQClient) {
+                           RabbitMQClient rabbitMQClient,
+                           EventBus eventBus) {
         this.smartHubConfig = smartHubConfig;
         this.rabbitMQClient = rabbitMQClient;
+        this.eventBus = eventBus;
     }
 
     public void startup(@Observes StartupEvent startupEvent) {
@@ -38,8 +42,7 @@ public class QueuesConsumers {
     public void setupDeviceProvisioningQueueListener() throws IOException {
         DeliverCallback deliverCallback = (consumerTag, delivery) -> {
             final var message = new String(delivery.getBody(), StandardCharsets.UTF_8);
-            LOGGER.info("[x] Received '" + message + "'");
-            // eventBus.sendAndForget("register-appliance", message)
+            eventBus.sendAndForget("device-provisioning", message);
         };
 
         this.rabbitMQClient.getRabbitMQChannel().basicConsume(
