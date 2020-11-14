@@ -1,0 +1,20 @@
+version: '3.8'
+
+networks:
+  smart-hub-network:
+
+services:
+  smart-hub-broker:
+    build:
+      context: ./iot-broker
+      dockerfile: Dockerfile
+    container_name: smart-hub-broker
+    restart: on-failure
+    ports:
+      - 1883:1883
+      - 15672:15732
+      - 5672:5672
+    networks:
+      - smart-hub-network
+    env_file:
+      - .env

@@ -1,8 +1,17 @@
-# smart-hub project
+# The tetracube's IoT Smart Hub project
 
-This project uses Quarkus, the Supersonic Subatomic Java Framework.
+This project represents the service, where all appliances that compound
+a smart-home, can connect to be used via cloud services such as
+Alexa Skill or Telegram Bot.
 
-If you want to learn more about Quarkus, please visit its website: https://quarkus.io/ .
+## Project structure
+The project is based on a broker and an application server built on Quarkus.
+
+The folder src/main/docker is the root folder of containers files, here you can find
+two of docker-compose files: one of development environment and another one for production. 
+Beside the docker-compose there is an example of dot-env file
+used to compile the images of PostgreSQL and RabbitMQ.<br/>
+The *iot-broker* folder contains RabbitMQ custom image built to activate MQTT plugin.
 
 ## Running the application in dev mode
 
