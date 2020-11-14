@@ -1,6 +1,7 @@
 package iot.tetracube.services;
 
 import io.quarkus.vertx.ConsumeEvent;
+import iot.tetracube.models.messages.DeviceProvisioningMessage;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.json.bind.Jsonb;
@@ -17,7 +18,7 @@ public class DeviceServices {
 
     @ConsumeEvent("device-provisioning")
     public void manageDeviceProvisioningMessage(String message) {
-        final var testObject = this.jsonb.fromJson(message, Map.class);
+        final var testObject = this.jsonb.fromJson(message, DeviceProvisioningMessage.class);
         final var e = testObject;
     }
 
