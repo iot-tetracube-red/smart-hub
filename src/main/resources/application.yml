@@ -8,3 +8,7 @@ smart-hub:
     port: ${RABBITMQ_PORT}
     username: ${RABBITMQ_USER}
     password: ${RABBITMQ_PASSWORD}
+    mqtt-exchange: amq.topic
+  queues:
+    device-provisioning-queue: device-provisioning
+    device-provisioning-topic: device.provisioning

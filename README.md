@@ -13,6 +13,46 @@ Beside the docker-compose there is an example of dot-env file
 used to compile the images of PostgreSQL and RabbitMQ.<br/>
 The *iot-broker* folder contains RabbitMQ custom image built to activate MQTT plugin.
 
+## Topic description
+
+### Device provisioning
+This topic is used by device to register its self in the hub.
+
+* Topic: `devices/provisioning`
+```json
+{
+  "circuit_id": "uuid string",
+  "default_name": "default device name",
+  "actions": [
+    {
+      "id": "uuid string",
+      "name": "action name",
+      "type": "action type compatible with ActionTimeEnum"
+    } 
+  ]
+}
+```
+
+Example of message
+```json
+{
+  "circuit_id": "09543601-23ee-4d3b-a3a5-527b3a6a8386",
+  "default_name": "Multimedia",
+  "actions": [
+    {
+      "id": "7e0d7f80-0eef-4d4f-b47c-ab886ca05126",
+      "name": "Turn on",
+      "type": "BUTTON"
+    },
+    {
+      "id": "457aad22-9659-4239-ad26-7f84472c16e7",
+      "name": "Turn off",
+      "type": "BUTTON"
+    } 
+  ]
+}
+```
+
 ## Running the application in dev mode
 
 You can run your application in dev mode that enables live coding using:

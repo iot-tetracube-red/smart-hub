@@ -24,9 +24,14 @@ public class RabbitMQClient {
         this.smartHubConfig = smartHubConfig;
         try {
             this.initializeConnection();
+            this.initializeQueues();
         } catch (IOException | TimeoutException e) {
             LOGGER.error("Cannot establish RabbitMQ connection. All services will be offline.");
         }
+    }
+
+    public Channel getRabbitMQChannel() {
+        return rabbitMQChannel;
     }
 
     private void initializeConnection() throws IOException, TimeoutException {
@@ -40,6 +45,24 @@ public class RabbitMQClient {
         LOGGER.info("Connecting to RabbitMQ broker");
         var rabbitMQConnection = rabbitMQConnectionFactory.newConnection();
         this.rabbitMQChannel = rabbitMQConnection.createChannel();
+    }
+
+    private void initializeQueues() throws IOException {
+        LOGGER.info("Initializing device provisioning queue");
+        rabbitMQChannel.queueDeclare(
+                this.smartHubConfig.queues().deviceProvisioningQueue(),
+                true,
+                false,
+                false,
+                null
+        );
+
+        LOGGER.info("Declaring queue binding with mqtt exchange");
+        rabbitMQChannel.queueBind(
+                this.smartHubConfig.queues().deviceProvisioningQueue(),
+                this.smartHubConfig.mqttBroker().mqttExchange(),
+                this.smartHubConfig.queues().deviceProvisioningTopic()
+        );
     }
 
 }

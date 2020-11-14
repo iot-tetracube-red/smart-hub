@@ -9,4 +9,7 @@ public interface SmartHubConfig {
     @ConfigProperty(name = "mqtt-broker")
     MqttBroker mqttBroker();
 
+    @ConfigProperty(name = "queues")
+    RabbitMQQueues queues();
+
 }
