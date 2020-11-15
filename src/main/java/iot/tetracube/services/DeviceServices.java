@@ -1,25 +1,64 @@
 package iot.tetracube.services;
 
 import io.quarkus.vertx.ConsumeEvent;
+import io.smallrye.mutiny.Uni;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
+import iot.tetracube.data.entities.Device;
+import iot.tetracube.data.repositories.DeviceRepository;
 import iot.tetracube.models.messages.DeviceProvisioningMessage;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.json.bind.Jsonb;
-import java.util.Map;
+import java.util.UUID;
 
 @ApplicationScoped
 public class DeviceServices {
 
-    private final Jsonb jsonb;
+    private final static Logger LOGGER = LoggerFactory.getLogger(DeviceServices.class);
 
-    public DeviceServices(Jsonb jsonb) {
+    private final Jsonb jsonb;
+    private final DeviceRepository deviceRepository;
+
+    public DeviceServices(Jsonb jsonb,
+                          DeviceRepository deviceRepository) {
         this.jsonb = jsonb;
+        this.deviceRepository = deviceRepository;
     }
 
     @ConsumeEvent("device-provisioning")
     public void manageDeviceProvisioningMessage(String message) {
-        final var testObject = this.jsonb.fromJson(message, DeviceProvisioningMessage.class);
-        final var e = testObject;
+        DeviceProvisioningMessage deviceProvisioningMessage;
+        try {
+            deviceProvisioningMessage = this.jsonb.fromJson(message, DeviceProvisioningMessage.class);
+        } catch (Exception e) {
+            LOGGER.error("Cannot convert message, ignoring it");
+            return;
+        }
+        LOGGER.info("Checking if device already exists");
+        var deviceExistsUni = this.deviceRepository.deviceExistsByCircuitId(deviceProvisioningMessage.getCircuitId());
+        Uni<Device> deviceUni = deviceExistsUni.flatMap(deviceExists -> {
+            if (deviceExists == null) {
+                LOGGER.error("There was some error during device verification, returning bad feedback to device");
+                return Uni.createFrom().nullItem();
+            } else if (deviceExists) {
+                LOGGER.info("Device exists, updating only its actions if needed");
+                return this.deviceRepository.getDeviceByCircuitId(deviceProvisioningMessage.getCircuitId());
+            } else {
+                LOGGER.info("Storing device data in database");
+                final var deviceEntity = new Device(
+                        UUID.randomUUID(),
+                        deviceProvisioningMessage.getCircuitId(),
+                        deviceProvisioningMessage.getDefaultName(),
+                        false
+                );
+                return this.deviceRepository.saveDevice(deviceEntity);
+            }
+        });
+        deviceUni.subscribe()
+                .with(device -> {
+                    LOGGER.info("Device stored, now processing actions");
+                });
     }
 
 }

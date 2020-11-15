@@ -1,6 +1,15 @@
-greeting:
-  message: "hello"
-  name: "quarkus"
+# => Server settings
+quarkus:
+  http:
+    port: 8081
+  # => Datasource settings
+  datasource:
+    reactive:
+      url: postgresql://${POSTGRES_HOST}:5432/${DB_NAME}
+    db-kind: postgresql
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+
 
 smart-hub:
   mqtt-broker:
