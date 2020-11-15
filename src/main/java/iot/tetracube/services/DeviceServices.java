@@ -50,7 +50,7 @@ public class DeviceServices {
                 return this.deviceRepository.getDeviceByCircuitId(deviceProvisioningMessage.getCircuitId());
             } else {
                 LOGGER.info("Storing device data in database");
-                final var deviceEntity = new Device(
+                var deviceEntity = new Device(
                         UUID.randomUUID(),
                         deviceProvisioningMessage.getCircuitId(),
                         deviceProvisioningMessage.getDefaultName(),

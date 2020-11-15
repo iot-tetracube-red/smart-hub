@@ -26,6 +26,7 @@ public class ActionServices {
     }
 
     public Uni<Boolean> storeDeviceAction(Device parentDevice, List<DeviceActionProvisioningMessage> actionsToStore) {
+        LOGGER.info("Processing " + actionsToStore.size() + " actions of device id " + parentDevice.getId());
         return Multi.createFrom().items(actionsToStore.stream())
                 .onItem()
                 .transformToMulti(actionToStore ->
@@ -41,7 +42,7 @@ public class ActionServices {
             if (actionExists == null) {
                 return Uni.createFrom().item(false);
             } else if (actionExists) {
-                LOGGER.info("Update action");
+                LOGGER.info("Ignoring action: already exists");
                 return Uni.createFrom().item(true);
             } else {
                 LOGGER.info("Adding action");
