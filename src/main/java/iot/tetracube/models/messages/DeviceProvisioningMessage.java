@@ -24,16 +24,12 @@ public class DeviceProvisioningMessage {
         return circuitId;
     }
 
-    public void setCircuitId(UUID circuitId) {
-        this.circuitId = circuitId;
-    }
-
     public String getDefaultName() {
         return defaultName;
     }
 
-    public void setDefaultName(String defaultName) {
-        this.defaultName = defaultName;
+    public List<DeviceActionProvisioningMessage> getDeviceActionProvisioningMessages() {
+        return deviceActionProvisioningMessages;
     }
 
 }

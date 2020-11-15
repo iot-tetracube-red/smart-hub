@@ -6,3 +6,12 @@ CREATE TABLE devices
     is_online     bool         not null default false,
     alexa_slot_id varchar(255) unique
 );
+
+CREATE TABLE actions
+(
+    id              uuid primary key unique,
+    device_id       uuid references devices (id),
+    translation_key varchar(255) not null,
+    hardware_id     uuid         not null,
+    alexa_intent    varchar(255)
+);

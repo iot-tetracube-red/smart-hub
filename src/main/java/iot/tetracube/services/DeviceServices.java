@@ -5,6 +5,7 @@ import io.smallrye.mutiny.Uni;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import iot.tetracube.data.entities.Device;
+import iot.tetracube.data.repositories.ActionRepository;
 import iot.tetracube.data.repositories.DeviceRepository;
 import iot.tetracube.models.messages.DeviceProvisioningMessage;
 
@@ -19,11 +20,14 @@ public class DeviceServices {
 
     private final Jsonb jsonb;
     private final DeviceRepository deviceRepository;
+    private final ActionServices actionServices;
 
     public DeviceServices(Jsonb jsonb,
-                          DeviceRepository deviceRepository) {
+                          DeviceRepository deviceRepository,
+                          ActionServices actionServices) {
         this.jsonb = jsonb;
         this.deviceRepository = deviceRepository;
+        this.actionServices = actionServices;
     }
 
     @ConsumeEvent("device-provisioning")
@@ -37,7 +41,7 @@ public class DeviceServices {
         }
         LOGGER.info("Checking if device already exists");
         var deviceExistsUni = this.deviceRepository.deviceExistsByCircuitId(deviceProvisioningMessage.getCircuitId());
-        Uni<Device> deviceUni = deviceExistsUni.flatMap(deviceExists -> {
+        var deviceUni = deviceExistsUni.flatMap(deviceExists -> {
             if (deviceExists == null) {
                 LOGGER.error("There was some error during device verification, returning bad feedback to device");
                 return Uni.createFrom().nullItem();
@@ -55,9 +59,16 @@ public class DeviceServices {
                 return this.deviceRepository.saveDevice(deviceEntity);
             }
         });
-        deviceUni.subscribe()
+        var actionSavedResultUni = deviceUni.flatMap(device -> {
+            if (device == null) {
+                return Uni.createFrom().item(false);
+            }
+            LOGGER.info("Device stored, now processing actions");
+            return this.actionServices.storeDeviceAction(device, deviceProvisioningMessage.getDeviceActionProvisioningMessages());
+        });
+        actionSavedResultUni.subscribe()
                 .with(device -> {
-                    LOGGER.info("Device stored, now processing actions");
+                    LOGGER.info("Processing promises chain");
                 });
     }
 
