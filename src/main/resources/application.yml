@@ -21,3 +21,4 @@ smart-hub:
   queues:
     device-provisioning-queue: device-provisioning
     device-provisioning-topic: device.provisioning
+    device-feedback-topic: device.feedback.{device_id}

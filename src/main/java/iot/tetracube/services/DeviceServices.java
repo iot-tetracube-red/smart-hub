@@ -4,8 +4,8 @@ import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import iot.tetracube.broker.QueuesProducers;
 import iot.tetracube.data.entities.Device;
-import iot.tetracube.data.repositories.ActionRepository;
 import iot.tetracube.data.repositories.DeviceRepository;
 import iot.tetracube.models.messages.DeviceProvisioningMessage;
 
@@ -21,13 +21,16 @@ public class DeviceServices {
     private final Jsonb jsonb;
     private final DeviceRepository deviceRepository;
     private final ActionServices actionServices;
+    private final QueuesProducers queuesProducers;
 
     public DeviceServices(Jsonb jsonb,
                           DeviceRepository deviceRepository,
-                          ActionServices actionServices) {
+                          ActionServices actionServices,
+                          QueuesProducers queuesProducers) {
         this.jsonb = jsonb;
         this.deviceRepository = deviceRepository;
         this.actionServices = actionServices;
+        this.queuesProducers = queuesProducers;
     }
 
     @ConsumeEvent("device-provisioning")
@@ -47,6 +50,7 @@ public class DeviceServices {
                 return Uni.createFrom().nullItem();
             } else if (deviceExists) {
                 LOGGER.info("Device exists, updating only its actions if needed");
+                this.queuesProducers.sendDeviceFeedback(deviceProvisioningMessage.getCircuitId(), true);
                 return this.deviceRepository.getDeviceByCircuitId(deviceProvisioningMessage.getCircuitId());
             } else {
                 LOGGER.info("Storing device data in database");
@@ -56,7 +60,9 @@ public class DeviceServices {
                         deviceProvisioningMessage.getDefaultName(),
                         false
                 );
-                return this.deviceRepository.saveDevice(deviceEntity);
+                var savedDevice =  this.deviceRepository.saveDevice(deviceEntity);
+                this.queuesProducers.sendDeviceFeedback(deviceProvisioningMessage.getCircuitId(), true);
+                return savedDevice;
             }
         });
         var actionSavedResultUni = deviceUni.flatMap(device -> {
@@ -64,7 +70,11 @@ public class DeviceServices {
                 return Uni.createFrom().item(false);
             }
             LOGGER.info("Device stored, now processing actions");
-            return this.actionServices.storeDeviceAction(device, deviceProvisioningMessage.getDeviceActionProvisioningMessages());
+            var storeActionsResultUni =  this.actionServices.storeDeviceAction(device, deviceProvisioningMessage.getDeviceActionProvisioningMessages())
+                    .invoke((storeActionsResult) -> {
+                        this.queuesProducers.sendDeviceFeedback(deviceProvisioningMessage.getCircuitId(), storeActionsResult);
+                    });
+            return storeActionsResultUni;
         });
         actionSavedResultUni.subscribe()
                 .with(device -> {

@@ -10,4 +10,7 @@ public interface RabbitMQQueues {
     @ConfigProperty(name = "device-provisioning-topic")
     String deviceProvisioningTopic();
 
+    @ConfigProperty(name = "device-feedback-topic")
+    String deviceFeedbackTopic();
+
 }
