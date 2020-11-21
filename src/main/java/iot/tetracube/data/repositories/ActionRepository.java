@@ -29,7 +29,7 @@ public class ActionRepository {
     }
 
     public Uni<Action> saveAction(Action action) {
-        var query = "INSERT INTO actions (id, device_id, translation_key, hardware_id) VALUES ($1, $2, $3, $4)";
+        var query = "INSERT INTO actions (id, device_id, translation_key, hardware_id) VALUES ($1, $2, $3, $4) RETURNING *";
         var parameters = Tuple.of(action.getId(), action.getDeviceId(), action.getTranslationKey(), action.getHardwareId());
         return this.pgPool.preparedQuery(query).execute(parameters)
                 .map(RowSet::iterator)

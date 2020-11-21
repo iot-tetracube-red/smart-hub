@@ -1,6 +1,6 @@
 package iot.tetracube.broker;
 
-import iot.tetracube.config.SmartHubConfig;
+import iot.tetracube.devices.SmartHubConfig;
 
 import javax.enterprise.context.ApplicationScoped;
 import java.io.IOException;

@@ -5,7 +5,8 @@ import io.quarkus.runtime.StartupEvent;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.mutiny.core.eventbus.EventBus;
-import iot.tetracube.config.SmartHubConfig;
+import iot.tetracube.devices.SmartHubConfig;
+import iot.tetracube.models.dto.ManageDeviceProvisioningResponse;
 
 import javax.ejb.Singleton;
 import javax.enterprise.context.ApplicationScoped;
@@ -22,13 +23,16 @@ public class QueuesConsumers {
     private final EventBus eventBus;
     private final SmartHubConfig smartHubConfig;
     private final RabbitMQClient rabbitMQClient;
+    private final QueuesProducers queuesProducers;
 
     public QueuesConsumers(SmartHubConfig smartHubConfig,
                            RabbitMQClient rabbitMQClient,
-                           EventBus eventBus) {
+                           EventBus eventBus,
+                           QueuesProducers queuesProducers) {
         this.smartHubConfig = smartHubConfig;
         this.rabbitMQClient = rabbitMQClient;
         this.eventBus = eventBus;
+        this.queuesProducers = queuesProducers;
     }
 
     public void startup(@Observes StartupEvent startupEvent) {
@@ -42,7 +46,13 @@ public class QueuesConsumers {
     public void setupDeviceProvisioningQueueListener() throws IOException {
         DeliverCallback deliverCallback = (consumerTag, delivery) -> {
             final var message = new String(delivery.getBody(), StandardCharsets.UTF_8);
-            eventBus.sendAndForget("device-provisioning", message);
+            eventBus.<ManageDeviceProvisioningResponse>request("device-provisioning", message)
+                    .onItem()
+                    .invoke(result -> {
+                        if (result != null) {
+                            this.queuesProducers.sendDeviceFeedback(result.body().getCircuitId(), result.body().getSuccess());
+                        }
+                    });
         };
 
         this.rabbitMQClient.getRabbitMQChannel().basicConsume(

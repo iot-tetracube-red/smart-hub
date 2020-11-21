@@ -1,5 +1,6 @@
 package iot.tetracube.data.repositories;
 
+import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.pgclient.PgPool;
 import io.vertx.mutiny.sqlclient.RowSet;
@@ -16,6 +17,18 @@ public class DeviceRepository {
 
     public DeviceRepository(PgPool pgPool) {
         this.pgPool = pgPool;
+    }
+
+    public Multi<Device> getDevices() {
+        var query = """
+                SELECT id, name, circuit_id, is_online, alexa_slot_id
+                FROM devices
+                """;
+        return this.pgPool.query(query).execute()
+                .onItem()
+                .transformToMulti(rows -> Multi.createFrom().iterable(rows))
+                .onItem()
+                .transform(Device::new);
     }
 
     public Uni<Boolean> deviceExistsByCircuitId(UUID circuitId) {

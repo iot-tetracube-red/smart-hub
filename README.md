@@ -16,7 +16,8 @@ The *iot-broker* folder contains RabbitMQ custom image built to activate MQTT pl
 ## Topic description
 
 ### Device provisioning
-This topic is used by device to register its self in the hub.
+When a device is turned on, for the first time or not, registers itself to the hub with the message where is reported
+its circuit id, a default name and a list of actions that are embeded in the devices.
 
 * Topic: `devices/provisioning`
 ```json

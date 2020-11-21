@@ -53,7 +53,7 @@ public class ActionServices {
                         actionToStore.getId()
                 );
                 return this.actionRepository.saveAction(action)
-                        .map(Objects::nonNull);
+                        .map(createdAction -> createdAction!= null);
             }
         });
     }
