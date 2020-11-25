@@ -47,8 +47,8 @@ public class QueuesConsumers {
         DeliverCallback deliverCallback = (consumerTag, delivery) -> {
             final var message = new String(delivery.getBody(), StandardCharsets.UTF_8);
             eventBus.<ManageDeviceProvisioningResponse>request("device-provisioning", message)
-                    .onItem()
-                    .invoke(result -> {
+                    .subscribe()
+                    .with(result -> {
                         if (result != null) {
                             this.queuesProducers.sendDeviceFeedback(result.body().getCircuitId(), result.body().getSuccess());
                         }

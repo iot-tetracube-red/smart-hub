@@ -94,6 +94,13 @@ public class DeviceServices {
                                 device.getName(),
                                 new ArrayList<>()
                         )
+                )
+                .onItem()
+                .call(device ->
+                        this.actionServices.getDeviceActions(device.getId())
+                                .collectItems().asList()
+                                .onItem()
+                                .invoke(actions -> device.getActions().addAll(actions))
                 );
     }
 

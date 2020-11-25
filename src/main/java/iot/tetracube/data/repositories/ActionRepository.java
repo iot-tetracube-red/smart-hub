@@ -1,5 +1,6 @@
 package iot.tetracube.data.repositories;
 
+import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.pgclient.PgPool;
 import io.vertx.mutiny.sqlclient.RowSet;
@@ -18,6 +19,16 @@ public class ActionRepository {
         this.pgPool = pgPool;
     }
 
+    public Multi<Action> getActionsByDevice(UUID deviceId) {
+        var query = "SELECT id, device_id, translation_key, hardware_id, alexa_intent FROM actions WHERE device_id = $1";
+        var parameters = Tuple.of(deviceId);
+        return this.pgPool.preparedQuery(query).execute(parameters)
+                .onItem()
+                .transformToMulti(rows -> Multi.createFrom().iterable(rows))
+                .onItem()
+                .transform(Action::new);
+    }
+
     public Uni<Boolean> existsActionByHardwareId(UUID hardwareId) {
         var query = "SELECT count(id) = 1 AS exists FROM actions WHERE hardware_id = $1";
         var parameters = Tuple.of(hardwareId);
@@ -33,9 +44,7 @@ public class ActionRepository {
         var parameters = Tuple.of(action.getId(), action.getDeviceId(), action.getTranslationKey(), action.getHardwareId());
         return this.pgPool.preparedQuery(query).execute(parameters)
                 .map(RowSet::iterator)
-                .map(rowIterator ->
-                        rowIterator.hasNext() ? new Action(rowIterator.next()) : null
-                );
+                .map(rowIterator -> rowIterator.hasNext() ? new Action(rowIterator.next()) : null);
     }
 
 }

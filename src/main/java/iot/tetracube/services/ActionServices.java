@@ -8,10 +8,10 @@ import iot.tetracube.data.entities.Action;
 import iot.tetracube.data.entities.Device;
 import iot.tetracube.data.repositories.ActionRepository;
 import iot.tetracube.models.messages.DeviceActionProvisioningMessage;
+import iot.tetracube.models.payloads.DeviceResponseAction;
 
 import javax.enterprise.context.ApplicationScoped;
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 
 @ApplicationScoped
@@ -23,6 +23,12 @@ public class ActionServices {
 
     public ActionServices(ActionRepository actionRepository) {
         this.actionRepository = actionRepository;
+    }
+
+    public Multi<DeviceResponseAction> getDeviceActions(UUID deviceId) {
+        return this.actionRepository.getActionsByDevice(deviceId)
+                .onItem()
+                .transform(action -> new DeviceResponseAction(action.getId(), action.getTranslationKey()));
     }
 
     public Uni<Boolean> storeDeviceAction(Device parentDevice, List<DeviceActionProvisioningMessage> actionsToStore) {
