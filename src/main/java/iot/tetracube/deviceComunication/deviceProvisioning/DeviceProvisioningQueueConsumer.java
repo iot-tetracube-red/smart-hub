@@ -5,7 +5,7 @@ import io.quarkus.runtime.StartupEvent;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.mutiny.core.eventbus.EventBus;
-import iot.tetracube.broker.QueuesProducers;
+import iot.tetracube.deviceComunication.feedback.DeviceFeedback;
 import iot.tetracube.broker.RabbitMQClient;
 import iot.tetracube.configurations.SmartHubConfig;
 import iot.tetracube.models.dto.ManageDeviceProvisioningResponse;
@@ -25,16 +25,16 @@ public class DeviceProvisioningQueueConsumer {
     private final EventBus eventBus;
     private final SmartHubConfig smartHubConfig;
     private final RabbitMQClient rabbitMQClient;
-    private final QueuesProducers queuesProducers;
+    private final DeviceFeedback deviceFeedback;
 
     public DeviceProvisioningQueueConsumer(SmartHubConfig smartHubConfig,
                                            RabbitMQClient rabbitMQClient,
                                            EventBus eventBus,
-                                           QueuesProducers queuesProducers) {
+                                           DeviceFeedback deviceFeedback) {
         this.smartHubConfig = smartHubConfig;
         this.rabbitMQClient = rabbitMQClient;
         this.eventBus = eventBus;
-        this.queuesProducers = queuesProducers;
+        this.deviceFeedback = deviceFeedback;
     }
 
     public void startup(@Observes StartupEvent startupEvent) {
@@ -53,7 +53,7 @@ public class DeviceProvisioningQueueConsumer {
                     .with(result -> {
                         if (result.body() != null) {
                             LOGGER.info("Sending feedback to device");
-                            this.queuesProducers.sendDeviceFeedback(result.body().getCircuitId(), result.body().getSuccess());
+                            this.deviceFeedback.sendDeviceFeedback(result.body().getCircuitId(), result.body().getSuccess());
                         }
                     });
         };

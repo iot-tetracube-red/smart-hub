@@ -1,5 +1,6 @@
-package iot.tetracube.broker;
+package iot.tetracube.deviceComunication.feedback;
 
+import iot.tetracube.broker.RabbitMQClient;
 import iot.tetracube.configurations.SmartHubConfig;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -7,13 +8,13 @@ import java.io.IOException;
 import java.util.UUID;
 
 @ApplicationScoped
-public class QueuesProducers {
+public class DeviceFeedback {
 
     private final RabbitMQClient rabbitMQClient;
     private final SmartHubConfig smartHubConfig;
 
-    public QueuesProducers(RabbitMQClient rabbitMQClient,
-                           SmartHubConfig smartHubConfig) {
+    public DeviceFeedback(RabbitMQClient rabbitMQClient,
+                          SmartHubConfig smartHubConfig) {
         this.rabbitMQClient = rabbitMQClient;
         this.smartHubConfig = smartHubConfig;
     }
@@ -30,7 +31,7 @@ public class QueuesProducers {
                     message.getBytes()
             );
         } catch (IOException e) {
-            e.printStackTrace();
+           return;
         }
     }
 

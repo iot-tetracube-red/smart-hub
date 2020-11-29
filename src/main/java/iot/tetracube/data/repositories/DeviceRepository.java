@@ -42,7 +42,7 @@ public class DeviceRepository {
     }
 
     public Uni<Device> getDeviceByCircuitId(UUID circuitId) {
-        var query = "SELECT id, name, circuit_id, is_online, alexa_slot_id FROM devices WHERE circuit_id = $1";
+        var query = "SELECT id, name, circuit_id, is_online, alexa_slot_id, client_name FROM devices WHERE circuit_id = $1";
         var parameters = Tuple.of(circuitId);
         return this.pgPool.preparedQuery(query).execute(parameters)
                 .map(RowSet::iterator)
