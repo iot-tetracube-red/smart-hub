@@ -8,20 +8,27 @@ public class Action {
 
     private UUID id;
     private UUID deviceId;
+    private String topic;
     private String translationKey;
     private UUID hardwareId;
     private String alexaIntent;
 
-    public Action(UUID id, UUID deviceId, String translationKey, UUID hardwareId) {
+    public Action(UUID id,
+                  UUID deviceId,
+                  String topic,
+                  String translationKey,
+                  UUID hardwareId) {
         this.id = id;
         this.deviceId = deviceId;
         this.translationKey = translationKey;
         this.hardwareId = hardwareId;
+        this.topic = topic;
     }
 
     public Action(Row row) {
         this.id = row.getUUID("id");
         this.deviceId = row.getUUID("device_id");
+        this.topic = row.getString("topic");
         this.translationKey = row.getString("translation_key");
         this.hardwareId = row.getUUID("hardware_id");
         this.alexaIntent = row.getString("alexa_intent");
@@ -65,6 +72,14 @@ public class Action {
 
     public void setAlexaIntent(String alexaIntent) {
         this.alexaIntent = alexaIntent;
+    }
+
+    public String getTopic() {
+        return topic;
+    }
+
+    public void setTopic(String topic) {
+        this.topic = topic;
     }
 
 }

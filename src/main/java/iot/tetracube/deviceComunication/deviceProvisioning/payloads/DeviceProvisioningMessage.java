@@ -1,4 +1,4 @@
-package iot.tetracube.models.messages;
+package iot.tetracube.deviceComunication.deviceProvisioning.payloads;
 
 import javax.json.bind.annotation.JsonbCreator;
 import javax.json.bind.annotation.JsonbProperty;
@@ -7,21 +7,28 @@ import java.util.UUID;
 
 public class DeviceProvisioningMessage {
 
-    private UUID circuitId;
+    private UUID id;
     private String defaultName;
+    private String hostname;
     private List<DeviceActionProvisioningMessage> deviceActionProvisioningMessages;
 
     @JsonbCreator
-    public DeviceProvisioningMessage(@JsonbProperty("circuit_id") UUID circuitId,
+    public DeviceProvisioningMessage(@JsonbProperty("id") UUID id,
                                      @JsonbProperty("default_name") String defaultName,
+                                     @JsonbProperty("hostname") String hostname,
                                      @JsonbProperty("actions") List<DeviceActionProvisioningMessage> deviceActionProvisioningMessages) {
-        this.circuitId = circuitId;
+        this.id = id;
         this.defaultName = defaultName;
+        this.hostname = hostname;
         this.deviceActionProvisioningMessages = deviceActionProvisioningMessages;
     }
 
-    public UUID getCircuitId() {
-        return circuitId;
+    public UUID getId() {
+        return id;
+    }
+
+    public String getHostname() {
+        return hostname;
     }
 
     public String getDefaultName() {

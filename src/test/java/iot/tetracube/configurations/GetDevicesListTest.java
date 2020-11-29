@@ -1,4 +1,4 @@
-package iot.tetracube.devices;
+package iot.tetracube.configurations;
 
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;

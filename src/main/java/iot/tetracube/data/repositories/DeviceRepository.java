@@ -21,7 +21,7 @@ public class DeviceRepository {
 
     public Multi<Device> getDevices() {
         var query = """
-                SELECT id, name, circuit_id, is_online, alexa_slot_id
+                SELECT id, name, circuit_id, is_online, alexa_slot_id, client_name
                 FROM devices
                 """;
         return this.pgPool.query(query).execute()
@@ -52,12 +52,13 @@ public class DeviceRepository {
     }
 
     public Uni<Device> saveDevice(Device device) {
-        var query = "INSERT INTO devices (id, name, circuit_id, is_online) VALUES($1, $2, $3, $4) RETURNING *";
+        var query = "INSERT INTO devices (id, name, circuit_id, is_online, client_name) VALUES($1, $2, $3, $4, $5) RETURNING *";
         var parameters = Tuple.of(
                 device.getId(),
                 device.getName(),
                 device.getCircuitId(),
-                device.getOnline()
+                device.getOnline(),
+                device.getClientName()
         );
         return this.pgPool.preparedQuery(query).execute(parameters)
                 .map(RowSet::iterator)

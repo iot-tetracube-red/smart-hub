@@ -11,12 +11,18 @@ public class Device {
     private String name;
     private Boolean isOnline;
     private String alexaSlotId;
+    private String clientName;
 
-    public Device(UUID id, UUID circuitId, String name, Boolean isOnline) {
+    public Device(UUID id,
+                  UUID circuitId,
+                  String name,
+                  Boolean isOnline,
+                  String clientName) {
         this.id = id;
         this.circuitId = circuitId;
         this.name = name;
         this.isOnline = isOnline;
+        this.clientName = clientName;
     }
 
     public Device(Row row) {
@@ -25,6 +31,7 @@ public class Device {
         this.name = row.getString("name");
         this.isOnline = row.getBoolean("is_online");
         this.alexaSlotId = row.getString("alexa_slot_id");
+        this.clientName = row.getString("client_name");
     }
 
     public UUID getId() {
@@ -65,6 +72,14 @@ public class Device {
 
     public void setAlexaSlotId(String alexaSlotId) {
         this.alexaSlotId = alexaSlotId;
+    }
+
+    public String getClientName() {
+        return clientName;
+    }
+
+    public void setClientName(String clientName) {
+        this.clientName = clientName;
     }
 
 }

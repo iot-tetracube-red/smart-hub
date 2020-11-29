@@ -4,7 +4,7 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.ConnectionFactory;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import iot.tetracube.devices.SmartHubConfig;
+import iot.tetracube.configurations.SmartHubConfig;
 
 import javax.ejb.Singleton;
 import javax.enterprise.context.ApplicationScoped;

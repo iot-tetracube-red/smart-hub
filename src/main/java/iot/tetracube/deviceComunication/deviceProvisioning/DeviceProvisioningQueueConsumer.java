@@ -1,11 +1,13 @@
-package iot.tetracube.broker;
+package iot.tetracube.deviceComunication.deviceProvisioning;
 
 import com.rabbitmq.client.DeliverCallback;
 import io.quarkus.runtime.StartupEvent;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.mutiny.core.eventbus.EventBus;
-import iot.tetracube.devices.SmartHubConfig;
+import iot.tetracube.broker.QueuesProducers;
+import iot.tetracube.broker.RabbitMQClient;
+import iot.tetracube.configurations.SmartHubConfig;
 import iot.tetracube.models.dto.ManageDeviceProvisioningResponse;
 
 import javax.ejb.Singleton;
@@ -16,19 +18,19 @@ import java.nio.charset.StandardCharsets;
 
 @Singleton
 @ApplicationScoped
-public class QueuesConsumers {
+public class DeviceProvisioningQueueConsumer {
 
-    private final static Logger LOGGER = LoggerFactory.getLogger(QueuesConsumers.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(DeviceProvisioningQueueConsumer.class);
 
     private final EventBus eventBus;
     private final SmartHubConfig smartHubConfig;
     private final RabbitMQClient rabbitMQClient;
     private final QueuesProducers queuesProducers;
 
-    public QueuesConsumers(SmartHubConfig smartHubConfig,
-                           RabbitMQClient rabbitMQClient,
-                           EventBus eventBus,
-                           QueuesProducers queuesProducers) {
+    public DeviceProvisioningQueueConsumer(SmartHubConfig smartHubConfig,
+                                           RabbitMQClient rabbitMQClient,
+                                           EventBus eventBus,
+                                           QueuesProducers queuesProducers) {
         this.smartHubConfig = smartHubConfig;
         this.rabbitMQClient = rabbitMQClient;
         this.eventBus = eventBus;
@@ -49,7 +51,8 @@ public class QueuesConsumers {
             eventBus.<ManageDeviceProvisioningResponse>request("device-provisioning", message)
                     .subscribe()
                     .with(result -> {
-                        if (result != null) {
+                        if (result.body() != null) {
+                            LOGGER.info("Sending feedback to device");
                             this.queuesProducers.sendDeviceFeedback(result.body().getCircuitId(), result.body().getSuccess());
                         }
                     });

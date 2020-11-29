@@ -1,4 +1,4 @@
-package iot.tetracube.devices;
+package iot.tetracube.configurations;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
