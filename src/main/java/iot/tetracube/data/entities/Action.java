@@ -9,18 +9,18 @@ public class Action {
     private UUID id;
     private UUID deviceId;
     private String topic;
-    private String translationKey;
+    private String name;
     private UUID hardwareId;
     private String alexaIntent;
 
     public Action(UUID id,
                   UUID deviceId,
                   String topic,
-                  String translationKey,
+                  String name,
                   UUID hardwareId) {
         this.id = id;
         this.deviceId = deviceId;
-        this.translationKey = translationKey;
+        this.name = name;
         this.hardwareId = hardwareId;
         this.topic = topic;
     }
@@ -29,7 +29,7 @@ public class Action {
         this.id = row.getUUID("id");
         this.deviceId = row.getUUID("device_id");
         this.topic = row.getString("topic");
-        this.translationKey = row.getString("translation_key");
+        this.name = row.getString("name");
         this.hardwareId = row.getUUID("hardware_id");
         this.alexaIntent = row.getString("alexa_intent");
     }
@@ -50,12 +50,12 @@ public class Action {
         this.deviceId = deviceId;
     }
 
-    public String getTranslationKey() {
-        return translationKey;
+    public String getName() {
+        return name;
     }
 
-    public void setTranslationKey(String translationKey) {
-        this.translationKey = translationKey;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public UUID getHardwareId() {

@@ -19,8 +19,17 @@ public class ActionRepository {
         this.pgPool = pgPool;
     }
 
+    public Uni<Action> getActionByName(String name) {
+        var query = "SELECT id, device_id, name, hardware_id, topic, alexa_intent FROM actions WHERE name = $1";
+        var parameters = Tuple.of(name);
+        return this.pgPool.preparedQuery(query).execute(parameters)
+                .onItem().transform(rows -> rows.iterator())
+                .onItem().transform(rowRowIterator -> rowRowIterator.hasNext() ? rowRowIterator.next() : null)
+                .onItem().transform(row -> row != null ? new Action(row) : null);
+    }
+
     public Multi<Action> getActionsByDevice(UUID deviceId) {
-        var query = "SELECT id, device_id, translation_key, hardware_id, alexa_intent, topic FROM actions WHERE device_id = $1";
+        var query = "SELECT id, device_id, name, hardware_id, alexa_intent, topic FROM actions WHERE device_id = $1";
         var parameters = Tuple.of(deviceId);
         return this.pgPool.preparedQuery(query).execute(parameters)
                 .onItem()
@@ -40,11 +49,11 @@ public class ActionRepository {
     }
 
     public Uni<Action> saveAction(Action action) {
-        var query = "INSERT INTO actions (id, device_id, translation_key, hardware_id, topic) VALUES ($1, $2, $3, $4, $5) RETURNING *";
+        var query = "INSERT INTO actions (id, device_id, name, hardware_id, topic) VALUES ($1, $2, $3, $4, $5) RETURNING *";
         var parameters = Tuple.of(
                 action.getId(),
                 action.getDeviceId(),
-                action.getTranslationKey(),
+                action.getName(),
                 action.getHardwareId(),
                 action.getTopic()
         );

@@ -13,10 +13,10 @@ CREATE TABLE devices
 
 CREATE TABLE actions
 (
-    id              uuid primary key unique,
-    device_id       uuid references devices (id),
-    translation_key varchar(255) not null,
-    hardware_id     uuid         not null,
-    topic           varchar(255) not null unique,
-    alexa_intent    varchar(255)
+    id           uuid primary key unique,
+    device_id    uuid references devices (id),
+    name         varchar(255) not null unique,
+    hardware_id  uuid         not null,
+    topic        varchar(255) not null unique,
+    alexa_intent varchar(255)
 );

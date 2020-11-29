@@ -23,7 +23,7 @@ public class ActionServices {
     public Multi<DeviceResponseAction> getDeviceActions(UUID deviceId) {
         return this.actionRepository.getActionsByDevice(deviceId)
                 .onItem()
-                .transform(action -> new DeviceResponseAction(action.getId(), action.getTranslationKey()));
+                .transform(action -> new DeviceResponseAction(action.getId(), action.getName()));
     }
 
 }
