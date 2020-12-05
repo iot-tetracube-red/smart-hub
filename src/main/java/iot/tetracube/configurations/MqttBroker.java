@@ -18,5 +18,4 @@ public interface MqttBroker {
 
     @ConfigProperty(name = "mqtt-exchange")
     String mqttExchange();
-
 }

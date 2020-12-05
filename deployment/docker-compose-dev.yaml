@@ -1,0 +1,32 @@
+version: '3.8'
+
+networks:
+  smart-hub-network:
+
+services:
+  smart-hub-broker:
+    build:
+      context: mqtt-broker
+      dockerfile: Dockerfile
+    container_name: smart-hub-broker
+    restart: on-failure
+    ports:
+      - 1883:1883
+      - 15672:15672
+      - 5672:5672
+    networks:
+      - smart-hub-network
+    env_file:
+      - .env.broker
+
+  smart-hub-db:
+    image: neo4j
+    container_name: smart-hub-graph-db
+    restart: on-failure
+    ports:
+      - 7474:7474
+      - 7687:7687
+    networks:
+      - smart-hub-network
+    env_file:
+      - .env.graph

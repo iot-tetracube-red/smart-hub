@@ -3,7 +3,6 @@ package iot.tetracube.configurations;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 public interface RabbitMQQueues {
-
     @ConfigProperty(name = "device-provisioning-queue")
     String deviceProvisioningQueue();
 
@@ -12,5 +11,4 @@ public interface RabbitMQQueues {
 
     @ConfigProperty(name = "device-feedback-topic")
     String deviceFeedbackTopic();
-
 }

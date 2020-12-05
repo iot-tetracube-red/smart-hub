@@ -11,5 +11,5 @@ public interface SmartHubConfig {
 
     @ConfigProperty(name = "queues")
     RabbitMQQueues queues();
-
 }
+
