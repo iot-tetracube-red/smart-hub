@@ -12,13 +12,15 @@ import iot.tetracube.data.entities.Action;
 import iot.tetracube.data.entities.Device;
 import iot.tetracube.data.repositories.ActionRepository;
 import iot.tetracube.data.repositories.DeviceRepository;
-import iot.tetracube.messagingInterface.deviceFeedback.DeviceFeedback;
+import iot.tetracube.messagingInterface.deviceFeedback.DeviceFeedbackProducer;
+import iot.tetracube.messagingInterface.deviceProvisioning.dto.ManageDeviceProvisioningResponse;
 import iot.tetracube.messagingInterface.deviceProvisioning.payloads.DeviceActionProvisioningMessage;
 import iot.tetracube.messagingInterface.deviceProvisioning.payloads.DeviceProvisioningMessage;
 import reactor.core.publisher.Mono;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.json.bind.Jsonb;
+import java.util.Optional;
 import java.util.UUID;
 
 @ApplicationScoped
@@ -30,18 +32,18 @@ public class DeviceProvisioningMessageHandlerService {
     private final SmartHubConfig smartHubConfig;
     private final DeviceRepository deviceRepository;
     private final ActionRepository actionRepository;
-    private final DeviceFeedback deviceFeedback;
+    private final DeviceFeedbackProducer deviceFeedbackProducer;
 
     public DeviceProvisioningMessageHandlerService(Jsonb jsonb,
                                                    SmartHubConfig smartHubConfig,
                                                    DeviceRepository deviceRepository,
                                                    ActionRepository actionRepository,
-                                                   DeviceFeedback deviceFeedback) {
+                                                   DeviceFeedbackProducer deviceFeedbackProducer) {
         this.jsonb = jsonb;
         this.smartHubConfig = smartHubConfig;
         this.deviceRepository = deviceRepository;
         this.actionRepository = actionRepository;
-        this.deviceFeedback = deviceFeedback;
+        this.deviceFeedbackProducer = deviceFeedbackProducer;
     }
 
     public void setupDeviceProvisioningQueueListener(RabbitMQClient brokerClient) {
@@ -59,16 +61,18 @@ public class DeviceProvisioningMessageHandlerService {
         LOGGER.info("Provisioning message arrived " + message);
         this.manageDeviceProvisioningMessage(message)
                 .onItem()
-                .transform(device -> {
-                    return device;
-                })
+                .invoke(provisioningResult ->
+                        this.deviceFeedbackProducer.sendDeviceFeedback(
+                                provisioningResult.getCircuitId(),
+                                provisioningResult.getSuccess()
+                        )
+                )
                 .subscribe()
-                .with(deviceCallback -> {
-                    LOGGER.info("Subscribed to database operations chains");
-                });
+                .with(deviceCallback ->
+                        LOGGER.info("Subscribed to database operations chains"));
     }
 
-    private Uni<Boolean> manageDeviceProvisioningMessage(String message) {
+    private Uni<ManageDeviceProvisioningResponse> manageDeviceProvisioningMessage(String message) {
         LOGGER.info("Parsing device provisioning message");
         DeviceProvisioningMessage deviceProvisioningMessage;
         try {
@@ -106,6 +110,7 @@ public class DeviceProvisioningMessageHandlerService {
                                 .transformToMulti(deviceAction -> this.deviceActionProvisioning(device.getId(), deviceAction))
                                 .concatenate().collectItems().asList()
                                 .map(results -> results.stream().allMatch(result -> result))
+                                .map(result -> new ManageDeviceProvisioningResponse(device.getCircuitId(), result))
                 );
     }
 
@@ -126,7 +131,7 @@ public class DeviceProvisioningMessageHandlerService {
                     deviceId
             );
             return this.actionRepository.createAction(action)
-                    .map(createdAction -> createdAction.isPresent());
+                    .map(Optional::isPresent);
         });
         return resultUni.convert().with(UniReactorConverters.toMono());
     }

@@ -42,6 +42,10 @@ public class RabbitMQInterface {
         }
     }
 
+    public RabbitMQClient getBrokerClient() {
+        return brokerClient;
+    }
+
     private void initializeConnection() throws IOException, TimeoutException {
         LOGGER.info("Setting up RabbitMQ connection options");
         var rabbitMQOptions = new RabbitMQOptions();
