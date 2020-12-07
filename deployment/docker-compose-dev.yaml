@@ -17,16 +17,15 @@ services:
     networks:
       - smart-hub-network
     env_file:
-      - .env.broker
+      - broker.env
 
   smart-hub-db:
-    image: neo4j
-    container_name: smart-hub-graph-db
+    image: postgres
+    container_name: smart-hub-db
     restart: on-failure
     ports:
-      - 7474:7474
-      - 7687:7687
+      - 5432:5432
     networks:
       - smart-hub-network
     env_file:
-      - .env.graph
+      - db.env

@@ -2,19 +2,18 @@ package iot.tetracube.messagingInterface.deviceFeedback;
 
 
 import iot.tetracube.configurations.SmartHubConfig;
-import iot.tetracube.messagingInterface.RabbitMQClient;
+import iot.tetracube.messagingInterface.RabbitMQInterface;
 
 import javax.enterprise.context.ApplicationScoped;
-import java.io.IOException;
 import java.util.UUID;
 
 @ApplicationScoped
 public class DeviceFeedback {
 
-    private final RabbitMQClient rabbitMQClient;
+    private final RabbitMQInterface rabbitMQClient;
     private final SmartHubConfig smartHubConfig;
 
-    public DeviceFeedback(RabbitMQClient rabbitMQClient,
+    public DeviceFeedback(RabbitMQInterface rabbitMQClient,
                           SmartHubConfig smartHubConfig) {
         this.rabbitMQClient = rabbitMQClient;
         this.smartHubConfig = smartHubConfig;
@@ -24,8 +23,8 @@ public class DeviceFeedback {
         var topicName = this.smartHubConfig.queues().deviceFeedbackTopic()
                 .replace("{device_id}", deviceId.toString());
         var message = feedback ? "1" : "0";
-        try {
-            this.rabbitMQClient.getRabbitMQChannel().basicPublish(
+      /*  try {
+         /*   this.rabbitMQClient.getRabbitMQChannel().basicPublish(
                     this.smartHubConfig.mqttBroker().mqttExchange(),
                     topicName,
                     null,
@@ -33,7 +32,7 @@ public class DeviceFeedback {
             );
         } catch (IOException e) {
             return;
-        }
+        }*/
     }
 }
 

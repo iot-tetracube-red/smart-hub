@@ -37,5 +37,5 @@ nb-configuration.xml
 
 # environment files
 .env
-.env.broker
-.env.graph
+broker.env
+db.env

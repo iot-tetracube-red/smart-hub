@@ -1,7 +1,8 @@
 package iot.tetracube.data.entities;
 
-import org.neo4j.driver.Record;
+import io.vertx.mutiny.sqlclient.Row;
 
+import java.util.List;
 import java.util.UUID;
 
 public class Device {
@@ -12,18 +13,15 @@ public class Device {
     private Boolean isOnline;
     private String alexaSlotId;
     private String clientName;
+    private List<Action> actions;
 
-    public Device(Record record) {
-        if(record.size() == 0) {
-            return;
-        }
-        var node = record.get(0).asNode();
-        this.id = UUID.fromString(node.get("id").asString());
-        this.circuitId = UUID.fromString(node.get("circuitId").asString());
-        this.name = node.get("name").asString();
-        this.isOnline = node.get("isOnline").asBoolean();
-        this.alexaSlotId = node.get("alexaSlotId").asString();
-        this.clientName = node.get("clientName").asString();
+    public Device(Row row) {
+        this.id = row.getUUID("id");
+        this.circuitId = row.getUUID("circuit_id");
+        this.name = row.getString("name");
+        this.isOnline = row.getBoolean("is_online");
+        this.alexaSlotId = row.getString("alexa_slot_id");
+        this.clientName = row.getString("client_name");
     }
 
     public Device(UUID id, UUID circuitId, String name, Boolean isOnline, String clientName) {
@@ -56,5 +54,13 @@ public class Device {
 
     public String getClientName() {
         return clientName;
+    }
+
+    public List<Action> getActions() {
+        return actions;
+    }
+
+    public void setActions(List<Action> actions) {
+        this.actions = actions;
     }
 }

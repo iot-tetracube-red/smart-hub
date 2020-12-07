@@ -1,56 +1,66 @@
 package iot.tetracube.data.repositories;
 
-import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
+import io.vertx.mutiny.pgclient.PgPool;
+import io.vertx.mutiny.sqlclient.RowIterator;
+import io.vertx.mutiny.sqlclient.RowSet;
+import io.vertx.mutiny.sqlclient.Tuple;
 import iot.tetracube.data.entities.Device;
-import org.neo4j.driver.Driver;
-import org.neo4j.driver.Query;
 
 import javax.enterprise.context.ApplicationScoped;
-import java.util.HashMap;
 import java.util.UUID;
 
 @ApplicationScoped
-public class DeviceRepository extends BaseRepository {
+public class DeviceRepository {
 
-    private final Driver driver;
+    private final PgPool pgPool;
 
-    public DeviceRepository(Driver driver) {
-        this.driver = driver;
+    public DeviceRepository(PgPool pgPool) {
+        this.pgPool = pgPool;
     }
 
     public Uni<Boolean> deviceExistsByCircuitId(UUID circuitId) {
-        var queryString = "match (device:Device {circuitId: $circuitId}) return count(device) = 1 as exists";
-        var params = new HashMap<String, Object>();
-        params.put("circuitId", circuitId.toString());
-        var query = new Query(queryString, params);
-        return this.executeQuery(this.driver, query)
-                .map(rxResult -> rxResult.get("exists").asBoolean());
-        //return Uni.createFrom().publisher(session.close());
+        var query = """
+                select count(id) = 1 device_exists
+                from devices
+                where circuit_id = $1
+                """;
+        var params = Tuple.of(circuitId);
+        return this.pgPool.preparedQuery(query).execute(params)
+                .map(RowSet::iterator)
+                .map(RowIterator::next)
+                .map(row -> row.getBoolean("device_exists"));
     }
 
     public Uni<Device> getDeviceByCircuitId(UUID circuitId) {
-        var queryString = "match (device:Device {circuitId: $circuitId}) return device";
-        var params = new HashMap<String, Object>();
-        params.put("circuitId", circuitId.toString());
-        var query = new Query(queryString, params);
-        return this.executeQuery(this.driver, query)
+        var query = """
+                select id, circuit_id, name, is_online, alexa_slot_id, client_name
+                from devices
+                where circuit_id = $1
+                """;
+        var params = Tuple.of(circuitId);
+        return this.pgPool.preparedQuery(query).execute(params)
+                .map(RowSet::iterator)
+                .map(RowIterator::next)
                 .map(Device::new);
     }
 
     public Uni<Device> createDevice(Device device) {
-        var queryString = "CREATE " +
-                "(device:Device {id: $id, circuitId: $circuitId, name: $name, isOnline: $isOnline, alexaSlotId: $alexaSlotId, clientName: $clientName}) " +
-                "RETURN device LIMIT 1";
-        var params = new HashMap<String, Object>();
-        params.put("id", device.getId().toString());
-        params.put("circuitId", device.getCircuitId().toString());
-        params.put("name", device.getName());
-        params.put("isOnline", device.getOnline());
-        params.put("alexaSlotId", "");
-        params.put("clientName", device.getClientName());
-        var query = new Query(queryString, params);
-        return this.executeQuery(this.driver, query)
+        var query = """
+                insert into devices(id, circuit_id, name, is_online, alexa_slot_id, client_name) 
+                values ($1, $2, $3, $4, null, $5)
+                returning *
+                """;
+        var params = Tuple.of(
+                device.getId(),
+                device.getCircuitId(),
+                device.getName(),
+                device.getOnline(),
+                device.getClientName()
+        );
+        return this.pgPool.preparedQuery(query).execute(params)
+                .map(RowSet::iterator)
+                .map(RowIterator::next)
                 .map(Device::new);
     }
 }
