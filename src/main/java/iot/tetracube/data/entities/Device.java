@@ -1,43 +1,21 @@
 package iot.tetracube.data.entities;
 
-import io.vertx.mutiny.sqlclient.Row;
+import io.quarkus.mongodb.panache.reactive.ReactivePanacheMongoEntity;
 
 import java.util.List;
 import java.util.UUID;
 
-public class Device {
+public class Device extends ReactivePanacheMongoEntity {
 
-    private UUID id;
-    private UUID circuitId;
-    private String name;
-    private Boolean isOnline;
-    private String alexaSlotId;
-    private String clientName;
-    private List<Action> actions;
+    public UUID deviceId;
+    public String name;
+    public Boolean isOnline;
+    public String alexaSlotId;
+    public String hostName;
+    public List<DeviceAction> actions;
 
-    public Device(Row row) {
-        this.id = row.getUUID("id");
-        this.circuitId = row.getUUID("circuit_id");
-        this.name = row.getString("name");
-        this.isOnline = row.getBoolean("is_online");
-        this.alexaSlotId = row.getString("alexa_slot_id");
-        this.clientName = row.getString("client_name");
-    }
-
-    public Device(UUID id, UUID circuitId, String name, Boolean isOnline, String clientName) {
-        this.id = id;
-        this.circuitId = circuitId;
-        this.name = name;
-        this.isOnline = isOnline;
-        this.clientName = clientName;
-    }
-
-    public UUID getId() {
-        return id;
-    }
-
-    public UUID getCircuitId() {
-        return circuitId;
+    public UUID getDeviceId() {
+        return deviceId;
     }
 
     public String getName() {
@@ -52,15 +30,11 @@ public class Device {
         return alexaSlotId;
     }
 
-    public String getClientName() {
-        return clientName;
+    public String getHostName() {
+        return hostName;
     }
 
-    public List<Action> getActions() {
+    public List<DeviceAction> getActions() {
         return actions;
-    }
-
-    public void setActions(List<Action> actions) {
-        this.actions = actions;
     }
 }

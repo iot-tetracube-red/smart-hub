@@ -1,0 +1,21 @@
+quarkus:
+  application:
+    name: smart-hub
+    version: ${SMART_HUB_VERSION}
+    port: 8080
+  mongodb:
+    connection-string: mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@${DB_HOST}:27017
+    database: ${DB_NAME}
+
+# => Application settings
+smart-hub:
+  mqtt-broker:
+    host: ${RABBITMQ_HOST}
+    port: ${RABBITMQ_PORT}
+    username: ${RABBITMQ_USER}
+    password: ${RABBITMQ_PASSWORD}
+    mqtt-exchange: amq.
+  queues:
+    device-provisioning-queue: device-provisioning
+    device-provisioning-topic: device.provisioning
+    device-feedback-topic: device.feedback.{device_id}

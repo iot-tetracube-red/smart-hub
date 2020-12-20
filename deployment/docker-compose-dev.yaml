@@ -20,11 +20,11 @@ services:
       - broker.env
 
   smart-hub-db:
-    image: postgres
+    image: mongo:latest
     container_name: smart-hub-db
     restart: on-failure
     ports:
-      - 5432:5432
+      - 27017:27017
     networks:
       - smart-hub-network
     env_file:

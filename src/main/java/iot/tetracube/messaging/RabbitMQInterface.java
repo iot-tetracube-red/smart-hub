@@ -1,22 +1,19 @@
-package iot.tetracube.messagingInterface;
+package iot.tetracube.messaging;
 
 import io.quarkus.runtime.StartupEvent;
+import io.smallrye.mutiny.TimeoutException;
 import io.vertx.mutiny.core.Vertx;
-import io.vertx.rabbitmq.RabbitMQOptions;
 import io.vertx.mutiny.rabbitmq.RabbitMQClient;
+import io.vertx.rabbitmq.RabbitMQOptions;
 import iot.tetracube.configurations.SmartHubConfig;
-import iot.tetracube.messagingInterface.deviceProvisioning.DeviceProvisioningMessageHandlerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ejb.Singleton;
-import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
+import javax.inject.Singleton;
 import java.io.IOException;
-import java.util.concurrent.TimeoutException;
 
 @Singleton
-@ApplicationScoped
 public class RabbitMQInterface {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(RabbitMQInterface.class);
@@ -24,26 +21,29 @@ public class RabbitMQInterface {
     private final SmartHubConfig smartHubConfig;
     private final Vertx vertx;
     private RabbitMQClient brokerClient;
-    private final DeviceProvisioningMessageHandlerService deviceProvisioningMessageHandlerService;
 
     public RabbitMQInterface(SmartHubConfig smartHubConfig,
-                             Vertx vertx,
-                             DeviceProvisioningMessageHandlerService deviceProvisioningMessageHandlerService) {
+                             Vertx vertx) {
         this.smartHubConfig = smartHubConfig;
         this.vertx = vertx;
-        this.deviceProvisioningMessageHandlerService = deviceProvisioningMessageHandlerService;
     }
 
     public void startup(@Observes StartupEvent startupEvent) {
         try {
             this.initializeConnection();
+            this.brokerClient.start().subscribe()
+                    .with((asyncResult) -> {
+                        LOGGER.info("Connection to broker success");
+                        try {
+                            this.initializeQueues();
+                        } catch (IOException ignored) {
+                            LOGGER.info("Cannot initialize queues - impossible");
+                        }
+                        //this.deviceProvisioningMessageHandlerService.setupDeviceProvisioningQueueListener(this.brokerClient);
+                    });
         } catch (IOException | TimeoutException e) {
             LOGGER.error("Cannot establish RabbitMQ connection. All services will be offline.");
         }
-    }
-
-    public RabbitMQClient getBrokerClient() {
-        return brokerClient;
     }
 
     private void initializeConnection() throws IOException, TimeoutException {
@@ -54,26 +54,15 @@ public class RabbitMQInterface {
         rabbitMQOptions.setUser(this.smartHubConfig.mqttBroker().username());
         rabbitMQOptions.setPassword(this.smartHubConfig.mqttBroker().password());
         rabbitMQOptions.setVirtualHost("/");
-        rabbitMQOptions.setConnectionTimeout(6000); // in milliseconds
-        rabbitMQOptions.setRequestedHeartbeat(60); // in seconds
-        rabbitMQOptions.setHandshakeTimeout(6000); // in milliseconds
+        rabbitMQOptions.setConnectionTimeout(6000);
+        rabbitMQOptions.setRequestedHeartbeat(60);
+        rabbitMQOptions.setHandshakeTimeout(6000);
         rabbitMQOptions.setRequestedChannelMax(5);
-        rabbitMQOptions.setNetworkRecoveryInterval(500); // in milliseconds
+        rabbitMQOptions.setNetworkRecoveryInterval(500);
         rabbitMQOptions.setAutomaticRecoveryEnabled(true);
 
         LOGGER.info("Creating RabbitMQ client");
         this.brokerClient = RabbitMQClient.create(this.vertx, rabbitMQOptions);
-        LOGGER.info("Listening to broker connection result");
-        this.brokerClient.start().subscribe()
-                .with((asyncResult) -> {
-                    LOGGER.info("Connection to broker success");
-                    try {
-                        this.initializeQueues();
-                    } catch (IOException ignored) {
-                        LOGGER.info("Cannot initialize queues - impossible");
-                    }
-                    this.deviceProvisioningMessageHandlerService.setupDeviceProvisioningQueueListener(this.brokerClient);
-                });
     }
 
     private void initializeQueues() throws IOException {
