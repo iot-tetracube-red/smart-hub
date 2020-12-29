@@ -55,3 +55,10 @@ Guide: https://quarkus.io/guides/config#yaml
 <p>A Hello World RESTEasy resource</p>
 
 Guide: https://quarkus.io/guides/rest-json
+
+# RESTEasy JSON serialisation using Jackson
+
+<p>This example demonstrate RESTEasy JSON serialisation by letting you list, add and remove quark types from a list.</p>
+<p><b>Quarked!</b></p>
+
+Guide: https://quarkus.io/guides/rest-json
