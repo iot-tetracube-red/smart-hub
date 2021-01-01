@@ -27,5 +27,3 @@ services:
       - 27017:27017
     networks:
       - smart-hub-network
-    env_file:
-      - db.env
