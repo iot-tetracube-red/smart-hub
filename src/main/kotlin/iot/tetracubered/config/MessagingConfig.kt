@@ -8,7 +8,7 @@ interface MessagingConfig {
     fun host(): String
 
     @ConfigProperty(name = "port")
-    fun port(): String
+    fun port(): Int
 
     @ConfigProperty(name = "user")
     fun user(): String
