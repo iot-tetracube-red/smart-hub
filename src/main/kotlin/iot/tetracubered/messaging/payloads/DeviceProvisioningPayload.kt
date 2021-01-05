@@ -5,8 +5,9 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import java.util.*
 
 data class DeviceProvisioningPayload @JsonCreator constructor(
-    @JsonProperty("id") val circuitId: UUID,
-    @JsonProperty("default_name") val name: String,
-    @JsonProperty("feedback_topic") val feedbackTopic: String,
-    @JsonProperty("actions") val actions: List<ActionProvisioningPayload>
+    @JsonProperty(value = "id") val circuitId: UUID,
+    @JsonProperty(value = "default_name") val name: String,
+    @JsonProperty(value = "feedback_topic") val feedbackTopic: String,
+    @JsonProperty(value = "querying_topic", required = false) val queryingTopic: String,
+    @JsonProperty(value = "actions") val actions: List<ActionProvisioningPayload>
 )

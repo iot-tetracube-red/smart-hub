@@ -1,20 +1,19 @@
-micronaut:
+quarkus:
   application:
-    name: smartHub
-mqtt:
-  client:
-    server-uri: tcp://${BROKER_HOST}:${BROKER_PORT}
-    client-id: SmartHubClient
+    name: smart-hub
+    version: ${SMART_HUB_VERSION}
+  datasource:
+    db-kind: postgresql
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    reactive:
+      url: postgresql://${DB_HOST}:5432/${DB_NAME}
+smart-hub:
+  messaging-client:
+    host: ${BROKER_HOST}
+    port: ${BROKER_PORT}
+    client-id: smart-hub-client
     user-name: ${BROKER_USER}
     password: ${BROKER_PASSWORD}
-    clean-start: true
-    clean-session: true
-vertx:
-  pg:
-    client:
-      port: 5432
-      host: ${DB_HOST}
-      database: ${DB_NAME}
-      user: ${DB_USER}
-      password: ${DB_PASSWORD}
-      maxSize: 5
+    topics:
+      device-provisioning: devices/provisioning

@@ -5,8 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import java.util.*
 
 data class ActionProvisioningPayload @JsonCreator constructor(
-    @JsonProperty("id") val actionId: UUID,
-    @JsonProperty("default_name") val name: String,
-    @JsonProperty("command_topic") val commandTopic: String?,
-    @JsonProperty("querying_topic") val queryingTopic: String?
+    @JsonProperty(value = "id") val actionId: UUID,
+    @JsonProperty(value = "default_name") val name: String,
+    @JsonProperty(value = "command_topic", required = false) val commandTopic: String
 )

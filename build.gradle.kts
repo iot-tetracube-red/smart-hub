@@ -1,67 +1,51 @@
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "1.4.10"
-    id("org.jetbrains.kotlin.kapt") version "1.4.10"
-    id("org.jetbrains.kotlin.plugin.allopen") version "1.4.10"
-    id("com.github.johnrengelman.shadow") version "6.1.0"
-    id("io.micronaut.application") version "1.2.0"
+    kotlin("jvm") version "1.4.21"
+    kotlin("plugin.allopen") version "1.4.21"
+    id("io.quarkus")
 }
 
-version = "0.1"
-group = "iot.tetracubered"
-
-val kotlinVersion=project.properties.get("kotlinVersion")
 repositories {
+    mavenLocal()
     mavenCentral()
-    jcenter()
 }
 
-micronaut {
-    runtime("netty")
-    testRuntime("junit5")
-    processing {
-        incremental(true)
-        annotations("iot.tetracubered.*")
-    }
-}
+val quarkusPlatformGroupId: String by project
+val quarkusPlatformArtifactId: String by project
+val quarkusPlatformVersion: String by project
 
 dependencies {
-    kapt("io.micronaut.openapi:micronaut-openapi")
-    implementation("io.micronaut:micronaut-validation")
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:${kotlinVersion}")
-    implementation("org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}")
-    implementation("io.micronaut.kotlin:micronaut-kotlin-runtime")
-    implementation("io.micronaut:micronaut-runtime")
-    implementation("javax.annotation:javax.annotation-api")
-    implementation("io.micronaut:micronaut-http-client")
-    implementation("io.swagger.core.v3:swagger-annotations")
-    implementation("io.micronaut.beanvalidation:micronaut-hibernate-validator")
-    implementation("io.micronaut.reactor:micronaut-reactor")
-    implementation("io.micronaut.sql:micronaut-vertx-pg-client")
-    implementation("io.micronaut.mqtt:micronaut-mqttv3")
-    runtimeOnly("ch.qos.logback:logback-classic")
-    runtimeOnly("com.fasterxml.jackson.module:jackson-module-kotlin")
+    implementation(enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}"))
+    implementation("io.quarkus:quarkus-vertx")
+    implementation("io.quarkus:quarkus-resteasy-jackson")
+    implementation("io.quarkus:quarkus-smallrye-reactive-messaging-mqtt")
+    implementation("io.quarkus:quarkus-container-image-docker")
+    implementation("io.quarkus:quarkus-hibernate-validator")
+    implementation("io.quarkus:quarkus-resteasy-mutiny")
+    implementation("io.quarkus:quarkus-smallrye-openapi")
+    implementation("io.quarkus:quarkus-smallrye-reactive-messaging")
+    implementation("io.quarkus:quarkus-config-yaml")
+    implementation("io.quarkus:quarkus-kotlin")
+    implementation("io.quarkus:quarkus-resteasy")
+    implementation("io.quarkus:quarkus-reactive-pg-client")
+    implementation("io.quarkus:quarkus-arc")
+    testImplementation("io.quarkus:quarkus-junit5")
 }
 
-
-application {
-    mainClass.set("iot.tetracubered.ApplicationKt")
-}
+group = "iot.tetracubered"
+version = "1.0.0-SNAPSHOT"
 
 java {
-    sourceCompatibility = JavaVersion.toVersion("14")
+    sourceCompatibility = JavaVersion.VERSION_14
+    targetCompatibility = JavaVersion.VERSION_14
 }
 
-tasks {
-    compileKotlin {
-        kotlinOptions {
-            jvmTarget = "14"
-        }
-    }
-    compileTestKotlin {
-        kotlinOptions {
-            jvmTarget = "14"
-        }
-    }
+allOpen {
+    annotation("javax.ws.rs.Path")
+    annotation("javax.enterprise.context.ApplicationScoped")
+    annotation("io.quarkus.test.junit.QuarkusTest")
+}
 
-
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+    kotlinOptions.jvmTarget = JavaVersion.VERSION_14.toString()
+    kotlinOptions.javaParameters = true
 }
