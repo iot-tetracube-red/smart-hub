@@ -1,0 +1,6 @@
+applicationType: default
+defaultPackage: iot.tetracubered
+testFramework: junit
+sourceLanguage: kotlin
+buildTool: gradle_kotlin
+features: [annotation-api, app-name, gradle, hibernate-validator, http-client, junit, kotlin, kotlin-application, logback, mqtt, mqttv3, netty-server, openapi, reactor, readme, shade, vertx-pg-client, yaml]
