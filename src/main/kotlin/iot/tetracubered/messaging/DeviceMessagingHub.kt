@@ -2,11 +2,13 @@ package iot.tetracubered.messaging
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.quarkus.runtime.StartupEvent
+import io.quarkus.vertx.ConsumeEvent
 import io.vertx.mqtt.MqttClientOptions
 import io.vertx.mutiny.core.Vertx
 import io.vertx.mutiny.core.eventbus.EventBus
 import io.vertx.mutiny.mqtt.MqttClient
 import iot.tetracubered.configurations.SmartHubConfiguration
+import iot.tetracubered.messaging.payloads.DeviceFeedbackMessage
 import iot.tetracubered.messaging.payloads.DeviceProvisioningPayload
 import org.slf4j.LoggerFactory
 import javax.enterprise.context.ApplicationScoped
@@ -39,6 +41,11 @@ class DeviceMessagingHub(
             .invoke { _ -> this.subscribeTopics() }
             .subscribe()
             .with { logger.info("MQTT connection success") }
+    }
+
+    @ConsumeEvent("send-feedback")
+    fun sendDeviceFeedback(deviceFeedbackMessage: DeviceFeedbackMessage) {
+
     }
 
     private fun subscribeTopics() {

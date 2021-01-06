@@ -3,11 +3,14 @@ package iot.tetracubered.services
 import io.quarkus.vertx.ConsumeEvent
 import io.smallrye.mutiny.Multi
 import io.smallrye.mutiny.Uni
+import io.vertx.mutiny.core.eventbus.EventBus
 import iot.tetracubered.data.entities.Action
 import iot.tetracubered.data.entities.Device
 import iot.tetracubered.data.repositories.ActionRepository
 import iot.tetracubered.data.repositories.DeviceRepository
+import iot.tetracubered.messaging.DeviceMessagingHub
 import iot.tetracubered.messaging.payloads.ActionProvisioningPayload
+import iot.tetracubered.messaging.payloads.DeviceFeedbackMessage
 import iot.tetracubered.messaging.payloads.DeviceProvisioningPayload
 import org.slf4j.LoggerFactory
 import java.util.*
@@ -16,7 +19,8 @@ import javax.enterprise.context.ApplicationScoped
 @ApplicationScoped
 class DeviceProvisioningService(
     private val deviceRepository: DeviceRepository,
-    private val actionRepository: ActionRepository
+    private val actionRepository: ActionRepository,
+    private val eventBus: EventBus
 ) {
 
     private val logger = LoggerFactory.getLogger(DeviceProvisioningService::class.java)
@@ -28,7 +32,16 @@ class DeviceProvisioningService(
             .flatMap { existsResponse -> this.getDeviceOrCreate(deviceProvisioningPayload, existsResponse) }
             .flatMap { device -> this.manageActionsProvisioning(device, deviceProvisioningPayload.actions) }
             .subscribe()
-            .with { logger.info("Device provisioning subscribed") }
+            .with {
+                logger.info("Device provisioning subscribed")
+                this.eventBus.publish("send-feedback",
+                    DeviceFeedbackMessage(
+                        deviceProvisioningPayload.circuitId,
+                        deviceProvisioningPayload.feedbackTopic,
+                        true
+                    )
+                )
+            }
     }
 
     private fun getDeviceOrCreate(deviceProvisioningPayload: DeviceProvisioningPayload, exists: Boolean): Uni<Device> =
