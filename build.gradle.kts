@@ -21,7 +21,7 @@ dependencies {
     implementation("io.quarkus:quarkus-container-image-docker")
     implementation("io.quarkus:quarkus-hibernate-validator")
     implementation("io.quarkus:quarkus-resteasy-mutiny")
-    implementation("io.quarkus:quarkus-smallrye-openapi")
+    //implementation("io.quarkus:quarkus-smallrye-openapi")
     implementation("io.quarkus:quarkus-smallrye-reactive-messaging")
     implementation("io.quarkus:quarkus-config-yaml")
     implementation("io.quarkus:quarkus-kotlin")
@@ -35,8 +35,8 @@ group = "iot.tetracubered"
 version = "1.0.0-SNAPSHOT"
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_14
-    targetCompatibility = JavaVersion.VERSION_14
+    sourceCompatibility = JavaVersion.VERSION_15
+    targetCompatibility = JavaVersion.VERSION_15
 }
 
 allOpen {

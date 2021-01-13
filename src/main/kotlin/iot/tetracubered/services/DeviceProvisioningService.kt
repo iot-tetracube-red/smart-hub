@@ -8,7 +8,6 @@ import iot.tetracubered.data.entities.Action
 import iot.tetracubered.data.entities.Device
 import iot.tetracubered.data.repositories.ActionRepository
 import iot.tetracubered.data.repositories.DeviceRepository
-import iot.tetracubered.messaging.DeviceMessagingHub
 import iot.tetracubered.messaging.payloads.ActionProvisioningPayload
 import iot.tetracubered.messaging.payloads.DeviceFeedbackMessage
 import iot.tetracubered.messaging.payloads.DeviceProvisioningPayload
