@@ -6,8 +6,8 @@ create table devices
     is_online      boolean      not null default false,
     feedback_topic varchar(255) not null unique,
     querying_topic varchar(255) not null unique,
-    status         json,
-    alexa_slot_id  varchar(255)
+    alexa_slot_id  varchar(255),
+    color_code     varchar(10)
 );
 
 create table actions
@@ -17,5 +17,6 @@ create table actions
     name          varchar(255) not null,
     command_topic varchar(255) not null unique,
     alexa_intent  varchar(255) unique,
+    value         float        not null,
     device_id     uuid         not null references devices (id)
 )
