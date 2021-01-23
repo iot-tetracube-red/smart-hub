@@ -12,10 +12,15 @@ public class DeviceActionResponse {
     @JsonProperty("name")
     private final String name;
 
+    @JsonProperty("value")
+    private final Float value;
+
     public DeviceActionResponse(UUID id,
-                                String name) {
+                                String name,
+                                Float value) {
         this.id = id;
         this.name = name;
+        this.value = value;
     }
 
     public UUID getId() {
@@ -24,5 +29,9 @@ public class DeviceActionResponse {
 
     public String getName() {
         return name;
+    }
+
+    public Float getValue() {
+        return value;
     }
 }
