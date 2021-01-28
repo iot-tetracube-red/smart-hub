@@ -5,14 +5,17 @@ networks:
 
 services:
   smart-hub-broker:
-    image: hivemq/hivemq-ce
+    image: vernemq/vernemq
     container_name: smart-hub-broker
     restart: on-failure
     ports:
       - 1883:1883
-      - 8000:8000
+      - 8888:8888
     networks:
       - smart-hub-network
+    environment:
+      - DOCKER_VERNEMQ_LISTENER__TCP__ALLOWED_PROTOCOL_versions=3,4,5
+      - DOCKER_VERNEMQ_ACCEPT_EULA=yes
     env_file:
       - broker.env
 
