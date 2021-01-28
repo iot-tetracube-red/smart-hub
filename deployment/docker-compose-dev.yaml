@@ -5,15 +5,12 @@ networks:
 
 services:
   smart-hub-broker:
-    build:
-      context: mqtt-broker
-      dockerfile: Dockerfile
+    image: hivemq/hivemq-ce
     container_name: smart-hub-broker
     restart: on-failure
     ports:
       - 1883:1883
-      - 15672:15672
-      - 5672:5672
+      - 8000:8000
     networks:
       - smart-hub-network
     env_file:

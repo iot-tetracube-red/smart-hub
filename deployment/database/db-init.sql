@@ -1,5 +1,5 @@
 drop schema public cascade;
-create schema public ;
+create schema public;
 
 create table devices
 (
@@ -21,7 +21,7 @@ create table features
     name          varchar(255) not null,
     feature_type  varchar(255) not null,
     current_value float        not null,
-    circuit_id    uuid         not null references devices (id)
+    device_id     uuid         not null references devices (id)
 );
 
 create table actions
