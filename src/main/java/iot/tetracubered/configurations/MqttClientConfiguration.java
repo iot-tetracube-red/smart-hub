@@ -2,7 +2,7 @@ package iot.tetracubered.configurations;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
-public interface MessagingClientConfiguration {
+public interface MqttClientConfiguration {
 
     @ConfigProperty(name = "host")
     String host();

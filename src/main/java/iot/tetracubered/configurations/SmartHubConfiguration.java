@@ -6,6 +6,6 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 @ConfigProperties(prefix = "smart-hub")
 public interface SmartHubConfiguration {
 
-    @ConfigProperty(name = "messaging-client")
-    MessagingClientConfiguration messagingClient();
+    @ConfigProperty(name = "mqtt-client")
+    MqttClientConfiguration mqttClient();
 }

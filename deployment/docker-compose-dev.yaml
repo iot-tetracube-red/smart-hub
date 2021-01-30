@@ -5,19 +5,15 @@ networks:
 
 services:
   smart-hub-broker:
-    image: vernemq/vernemq
+    image: emqx/emqx:latest
     container_name: smart-hub-broker
     restart: on-failure
     ports:
       - 1883:1883
-      - 8888:8888
+      - 18083:18083
+      - 8090:8080
     networks:
       - smart-hub-network
-    environment:
-      - DOCKER_VERNEMQ_LISTENER__TCP__ALLOWED_PROTOCOL_versions=3,4,5
-      - DOCKER_VERNEMQ_ACCEPT_EULA=yes
-    env_file:
-      - broker.env
 
   smart-hub-db:
     image: postgres:latest
