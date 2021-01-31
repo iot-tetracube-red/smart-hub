@@ -1,6 +1,8 @@
 package iot.tetracubered.mqttClient;
 
 import io.quarkus.runtime.StartupEvent;
+import io.quarkus.vertx.ConsumeEvent;
+import io.smallrye.mutiny.Uni;
 import iot.tetracubered.configurations.SmartHubConfiguration;
 import org.eclipse.paho.mqttv5.client.*;
 import org.eclipse.paho.mqttv5.client.persist.MemoryPersistence;
@@ -45,5 +47,15 @@ public class MqttClientHub {
         this.mqttClient.connect(connectionOptions);
         LOGGER.info("Subscribing to topics");
         this.mqttClient.subscribe(this.smartHubConfiguration.mqttClient().topics().deviceProvisioning(), 2);
+    }
+
+    @ConsumeEvent("query-action")
+    public Boolean queryAction(String topic) {
+        try {
+            this.mqttClient.publish(topic, "1".getBytes(), 2, false);
+            return true;
+        } catch (MqttException e) {
+            return false;
+        }
     }
 }

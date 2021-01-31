@@ -77,4 +77,26 @@ public class ActionRepository {
                 .map(RowIterator::next)
                 .map(Action::new);
     }
+
+    public Uni<String> getActionTriggerTopicByName(String deviceName, String featureName, String actionName) {
+        var query = """
+                select *
+                from actions a
+                inner join features f on f.id = a.feature_id
+                inner join devices d on d.id = f.device_id
+                where d.name = $1 and f.name = $2 and a.name = $3
+                """;
+        var queryParameters = Tuple.of(
+                deviceName,
+                featureName,
+                actionName
+        );
+        return this.pgPool.preparedQuery(query).execute(queryParameters)
+                .map(RowSet::iterator)
+                .map(rowRowIterator ->
+                        rowRowIterator.hasNext()
+                                ? rowRowIterator.next().getString("trigger_topic")
+                                : null
+                );
+    }
 }
