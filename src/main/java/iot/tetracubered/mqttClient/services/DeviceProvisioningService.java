@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.List;
 import java.util.UUID;
 
 @ApplicationScoped
@@ -36,86 +37,81 @@ public class DeviceProvisioningService {
     @ConsumeEvent("device-provisioning")
     public void deviceProvisioning(DeviceProvisioningPayload deviceProvisioningPayload) {
         LOGGER.info("Trying to store device with circuit id: " + deviceProvisioningPayload.getId());
-        var device = new Device(
-                UUID.randomUUID(),
-                deviceProvisioningPayload.getId(),
-                deviceProvisioningPayload.getName(),
-                true,
-                deviceProvisioningPayload.getFeedbackTopic()
-        );
 
         var deviceUni = this.deviceRepository.existsByCircuitId(deviceProvisioningPayload.getId())
                 .flatMap(deviceExists -> {
-                    if (deviceExists) {
-                        LOGGER.info("Device already exists no need to store again");
-                        return this.deviceRepository.getDeviceByCircuitId(deviceProvisioningPayload.getId());
-                    }
-                    LOGGER.info("Storing a new device");
-                    return this.deviceRepository.saveDevice(device);
-                })
-                .flatMap(storedDevices ->
-                        Multi.createFrom().items(deviceProvisioningPayload.getFeatures().stream())
-                                .flatMap(feature -> this.storeFeature(storedDevices, feature))
-                                .map(storedFeature -> {
-                                    storedDevices.getFeatures().add(storedFeature);
-                                    return storedDevices;
-                                })
-                                .toUni()
-                );
+                    var device = new Device(
+                            UUID.randomUUID(),
+                            deviceProvisioningPayload.getId(),
+                            deviceProvisioningPayload.getName(),
+                            true,
+                            deviceProvisioningPayload.getFeedbackTopic()
+                    );
+                    return deviceExists
+                            ? this.deviceRepository.getDeviceByCircuitId(deviceProvisioningPayload.getId())
+                            : this.deviceRepository.saveDevice(device);
+                });
 
-        deviceUni.subscribe()
-                .with(d -> LOGGER.info("Device stored successfully with id: " + d.getId()));
+        var deviceWithFeatures = deviceUni.flatMap(device -> this.storeFeature(device, deviceProvisioningPayload.getFeatures()))
+                .flatMap(features -> deviceUni.map(device -> device.getFeatures().addAll(features)));
+
+        deviceWithFeatures.subscribe()
+                .with(d -> LOGGER.info("Subscribed to events chains"));
     }
 
-    private Multi<Feature> storeFeature(Device device, DeviceFeatureProvisioningPayload featureToStore) {
-        var featureUni = this.featureRepository.existsByDeviceAndFeatureId(device.getCircuitId(), featureToStore.getFeatureId())
-                .flatMap(exists -> {
-                    if (exists) {
-                        LOGGER.info("Feature already exists no need to store again");
-                        return this.featureRepository.getFeatureByDeviceAndFeatureId(device.getCircuitId(), featureToStore.getFeatureId());
-                    }
-                    LOGGER.info("Storing the new feature");
-                    var feature = new Feature(
-                            UUID.randomUUID(),
-                            featureToStore.getFeatureId(),
-                            featureToStore.getName(),
-                            featureToStore.getFeatureType(),
-                            featureToStore.getValue(),
-                            device.getId()
-                    );
-                    return this.featureRepository.saveFeature(feature);
+    private Uni<List<Feature>> storeFeature(Device device, List<DeviceFeatureProvisioningPayload> features) {
+        return Multi.createFrom().items(features.stream())
+                .flatMap(feature -> {
+                    var storedFeatureUni = this.featureRepository.existsByDeviceAndFeatureId(device.getCircuitId(), feature.getFeatureId())
+                            .flatMap(featureExists -> {
+                                var newFeature = new Feature(
+                                        UUID.randomUUID(),
+                                        feature.getFeatureId(),
+                                        feature.getName(),
+                                        feature.getFeatureType(),
+                                        feature.getValue(),
+                                        device.getId()
+                                );
+                                return featureExists
+                                        ? this.featureRepository.getFeatureByDeviceAndFeatureId(device.getCircuitId(), feature.getFeatureId())
+                                        : this.featureRepository.saveFeature(newFeature);
+                            });
+                    var featureWithActions = this.storeAction(storedFeatureUni, feature.getActions());
+                    return featureWithActions.toMulti();
                 })
-                .flatMap(storedFeature ->
-                        Multi.createFrom().items(featureToStore.getActions().stream())
-                                .flatMap(action -> this.storeAction(storedFeature, action))
-                                .map(storedActions -> {
-                                    storedFeature.getActions().add(storedActions);
-                                    return storedFeature;
-                                })
-                                .toUni()
-                );
-
-        return featureUni.toMulti();
+                .collectItems()
+                .asList();
     }
 
-    private Multi<Action> storeAction(Feature feature, DeviceFeatureActionProvisioningPayload actionToStore) {
-        return this.actionRepository.actionExistsByFeatureAndActionId(feature.getFeatureId(), actionToStore.getActionId())
-                .flatMap(actionExists -> {
-                    if (actionExists) {
-                        LOGGER.info("Action already exists no need to store again");
-                        return this.actionRepository.getActionByFeatureAndActionId(feature.getFeatureId(), actionToStore.getActionId());
-                    }
+    private Uni<Feature> storeAction(Uni<Feature> featureUni, List<DeviceFeatureActionProvisioningPayload> actionsToStore) {
+        return featureUni.flatMap(feature ->
+                Multi.createFrom().items(actionsToStore.stream())
+                        .flatMap(actionToStore ->
+                                this.actionRepository.actionExistsByFeatureAndActionId(feature.getFeatureId(), actionToStore.getActionId())
+                                        .flatMap(actionExists -> {
+                                            if (actionExists) {
+                                                LOGGER.info("Action already exists no need to store again");
+                                                return this.actionRepository.getActionByFeatureAndActionId(feature.getFeatureId(), actionToStore.getActionId());
+                                            }
 
-                    LOGGER.info("Storing the new action");
-                    var action = new Action(
-                            UUID.randomUUID(),
-                            actionToStore.getActionId(),
-                            actionToStore.getTriggerTopic(),
-                            actionToStore.getName(),
-                            feature.getId()
-                    );
-                    return this.actionRepository.saveAction(action);
-                })
-                .toMulti();
+                                            LOGGER.info("Storing the new action");
+                                            var action = new Action(
+                                                    UUID.randomUUID(),
+                                                    actionToStore.getActionId(),
+                                                    actionToStore.getTriggerTopic(),
+                                                    actionToStore.getName(),
+                                                    feature.getId()
+                                            );
+                                            return this.actionRepository.saveAction(action);
+                                        })
+                                        .toMulti()
+                        )
+                        .collectItems()
+                        .asList()
+                        .map(actions -> {
+                            feature.getActions().addAll(actions);
+                            return feature;
+                        })
+        );
     }
 }
