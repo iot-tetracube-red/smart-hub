@@ -15,9 +15,7 @@ create table devices
 create table features
 (
     id            uuid primary key,
-    feature_id    uuid unique  not null,
-    command_topic varchar(255) not null unique,
-    query_topic   varchar(255) not null unique,
+    feature_id    uuid         not null,
     name          varchar(255) not null,
     feature_type  varchar(255) not null,
     current_value float        not null,
@@ -26,9 +24,10 @@ create table features
 
 create table actions
 (
-    id           uuid primary key,
-    action_id    uuid unique  not null,
-    name         varchar(255) not null,
-    alexa_intent varchar(255) unique,
-    feature_id   uuid         not null references features (id)
+    id            uuid primary key,
+    action_id     uuid unique  not null,
+    trigger_topic varchar(255) not null unique,
+    name          varchar(255) not null,
+    alexa_intent  varchar(255) unique,
+    feature_id    uuid         not null references features (id)
 );

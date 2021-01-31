@@ -3,28 +3,43 @@ package iot.tetracubered.data.entities;
 import io.vertx.mutiny.sqlclient.Row;
 import iot.tetracubered.enumerations.FeatureType;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public class Feature {
 
     private final UUID id;
     private final UUID featureId;
-    private final String commandTopic;
-    private final String queryTopic;
     private final String name;
     private final FeatureType featureType;
     private final Float currentValue;
-    private final UUID circuitId;
+    private final UUID deviceId;
+    private final List<Action> actions;
+
+    public Feature(UUID id,
+                   UUID featureId,
+                   String name,
+                   FeatureType featureType,
+                   Float currentValue,
+                   UUID deviceId) {
+        this.id = id;
+        this.featureId = featureId;
+        this.name = name;
+        this.featureType = featureType;
+        this.currentValue = currentValue;
+        this.deviceId = deviceId;
+        this.actions = new ArrayList<>();
+    }
 
     public Feature(Row row) {
         this.id = row.getUUID("id");
         this.featureId = row.getUUID("feature_id");
-        this.circuitId = row.getUUID("circuit_id");
-        this.commandTopic = row.getString("command_topic");
-        this.queryTopic = row.getString("query_topic");
+        this.deviceId = row.getUUID("device_id");
         this.name = row.getString("name");
         this.featureType = FeatureType.valueOf(row.getString("feature_type"));
         this.currentValue = row.getFloat("current_value");
+        this.actions = new ArrayList<>();
     }
 
     public UUID getId() {
@@ -33,14 +48,6 @@ public class Feature {
 
     public UUID getFeatureId() {
         return featureId;
-    }
-
-    public String getCommandTopic() {
-        return commandTopic;
-    }
-
-    public String getQueryTopic() {
-        return queryTopic;
     }
 
     public String getName() {
@@ -55,7 +62,11 @@ public class Feature {
         return currentValue;
     }
 
-    public UUID getCircuitId() {
-        return circuitId;
+    public UUID getDeviceId() {
+        return deviceId;
+    }
+
+    public List<Action> getActions() {
+        return actions;
     }
 }

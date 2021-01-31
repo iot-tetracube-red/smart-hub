@@ -18,6 +18,9 @@ public class MqttClientHub {
     @Inject
     SmartHubConfiguration smartHubConfiguration;
 
+    @Inject
+    MqttClientCallbacks mqttClientCallbacks;
+
     private MqttClient mqttClient;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MqttClientHub.class);
@@ -34,7 +37,7 @@ public class MqttClientHub {
                 new MemoryPersistence()
         );
         LOGGER.info("Setting MQTT callback class");
-        this.mqttClient.setCallback(new MqttClientCallbacks());
+        this.mqttClient.setCallback(this.mqttClientCallbacks);
         LOGGER.info("Setting MQTT connection options");
         var connectionOptions = new MqttConnectionOptions();
         connectionOptions.setCleanStart(true);

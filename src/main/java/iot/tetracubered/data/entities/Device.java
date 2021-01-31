@@ -15,7 +15,22 @@ public class Device {
     private final String feedbackTopic;
     private final String alexaSlotId;
     private final String colorCode;
-    private final List<Action> actions;
+    private final List<Feature> features;
+
+    public Device(UUID id,
+                  UUID circuitId,
+                  String name,
+                  Boolean isOnline,
+                  String feedbackTopic) {
+        this.id = id;
+        this.circuitId = circuitId;
+        this.name = name;
+        this.isOnline = isOnline;
+        this.feedbackTopic = feedbackTopic;
+        this.alexaSlotId = null;
+        this.colorCode = null;
+        this.features = new ArrayList<>();
+    }
 
     public Device(Row row) {
         this.id = row.getUUID("id");
@@ -25,7 +40,7 @@ public class Device {
         this.feedbackTopic = row.getString("feedback_topic");
         this.alexaSlotId = row.getString("alexa_slot_id");
         this.colorCode = row.getString("color_code");
-        this.actions = new ArrayList<>();
+        this.features = new ArrayList<>();
     }
 
     public UUID getId() {
@@ -52,8 +67,8 @@ public class Device {
         return alexaSlotId;
     }
 
-    public List<Action> getActions() {
-        return actions;
+    public List<Feature> getFeatures() {
+        return features;
     }
 
     public String getColorCode() {

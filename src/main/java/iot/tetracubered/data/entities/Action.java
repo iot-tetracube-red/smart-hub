@@ -8,20 +8,31 @@ public class Action {
 
     private final UUID id;
     private final UUID actionId;
+    private final String triggerTopic;
     private final String name;
-    private final String commandTopic;
     private final String alexaIntent;
-    private final UUID deviceId;
-    private final Float value;
+    private final UUID featureId;
+
+    public Action(UUID id,
+                  UUID actionId,
+                  String triggerTopic,
+                  String name,
+                  UUID featureId) {
+        this.id = id;
+        this.actionId = actionId;
+        this.triggerTopic = triggerTopic;
+        this.name = name;
+        this.featureId = featureId;
+        this.alexaIntent = null;
+    }
 
     public Action(Row row) {
         this.id = row.getUUID("id");
         this.actionId = row.getUUID("action_id");
         this.name = row.getString("name");
-        this.commandTopic = row.getString("command_topic");
+        this.triggerTopic = row.getString("trigger_topic");
         this.alexaIntent = row.getString("alexa_intent");
-        this.deviceId = row.getUUID("device_id");
-        this.value = row.getFloat("value");
+        this.featureId = row.getUUID("feature_id");
     }
 
     public UUID getId() {
@@ -32,23 +43,19 @@ public class Action {
         return actionId;
     }
 
-    public String getName() {
-        return name;
+    public String getTriggerTopic() {
+        return triggerTopic;
     }
 
-    public String getCommandTopic() {
-        return commandTopic;
+    public String getName() {
+        return name;
     }
 
     public String getAlexaIntent() {
         return alexaIntent;
     }
 
-    public UUID getDeviceId() {
-        return deviceId;
-    }
-
-    public Float getValue() {
-        return value;
+    public UUID getFeatureId() {
+        return featureId;
     }
 }
