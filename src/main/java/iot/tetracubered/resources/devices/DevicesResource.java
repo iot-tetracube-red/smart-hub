@@ -9,7 +9,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-@Path("/devices")
+@Path("/api/devices")
 public class DevicesResource {
 
     @Inject
