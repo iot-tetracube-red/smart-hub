@@ -2,9 +2,9 @@ package iot.tetracubered.mqttClient;
 
 import io.quarkus.runtime.StartupEvent;
 import io.quarkus.vertx.ConsumeEvent;
-import io.smallrye.mutiny.Uni;
 import iot.tetracubered.configurations.SmartHubConfiguration;
-import org.eclipse.paho.mqttv5.client.*;
+import org.eclipse.paho.mqttv5.client.MqttClient;
+import org.eclipse.paho.mqttv5.client.MqttConnectionOptions;
 import org.eclipse.paho.mqttv5.client.persist.MemoryPersistence;
 import org.eclipse.paho.mqttv5.common.MqttException;
 import org.slf4j.Logger;
