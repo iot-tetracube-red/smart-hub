@@ -50,20 +50,20 @@ public class BotResources {
     @GET
     @Path("/devices/{deviceName}/features/{featureName}/commands")
     @Produces(value = MediaType.APPLICATION_JSON)
-    public Multi<GetCommandsResponse> getCommands(@PathParam("deviceName") String deviceName,
-                                                  @PathParam("featureName") String featureName) {
+    public Uni<GetCommandsResponse> getCommands(@PathParam("deviceName") String deviceName,
+                                                @PathParam("featureName") String featureName) {
         return this.botBusinessServices.getCommandsByDeviceAndFeature(deviceName, featureName)
-                .onCompletion()
-                .ifEmpty()
-                .failWith(() -> {
-                    throw new NotFoundException(
-                            """
-                                    Cannot find any command for combination device: {deviceName}
-                                    and feature: {featureName}
-                                    """
-                                    .replace("{deviceName}", deviceName)
-                                    .replace("{featureName}", featureName)
-                    );
+                .invoke(response -> {
+                    if (response == null) {
+                        throw new NotFoundException(
+                                """
+                                        Cannot find any command for combination device: {deviceName}
+                                        and feature: {featureName}
+                                        """
+                                        .replace("{deviceName}", deviceName)
+                                        .replace("{featureName}", featureName)
+                        );
+                    }
                 });
     }
 

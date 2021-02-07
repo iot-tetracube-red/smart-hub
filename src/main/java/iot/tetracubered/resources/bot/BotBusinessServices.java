@@ -4,6 +4,7 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.core.eventbus.EventBus;
 import io.vertx.mutiny.core.eventbus.Message;
+import iot.tetracubered.data.entities.Action;
 import iot.tetracubered.data.entities.Device;
 import iot.tetracubered.data.entities.Feature;
 import iot.tetracubered.data.repositories.ActionRepository;
@@ -37,15 +38,15 @@ public class BotBusinessServices {
                 .flatMap(this::collectFeaturePerDevice);
     }
 
-    public Multi<GetCommandsResponse> getCommandsByDeviceAndFeature(String deviceName,
+    public Uni<GetCommandsResponse> getCommandsByDeviceAndFeature(String deviceName,
                                                                     String featureName) {
-        return this.featureRepository.getFeatureByDeviceAndFeatureName(deviceName, featureName)
-                .toMulti()
-                .flatMap(feature -> {
-                    if (feature == null) {
-                        return Multi.createFrom().nothing();
+        return this.deviceRepository.getDeviceByName(deviceName)
+                .flatMap(device -> {
+                    if (device == null) {
+                        return Uni.createFrom().nullItem();
                     }
-                    return this.mapCommandsByFeature(feature);
+
+                    return this.mapCommandsByDevice(device, featureName);
                 });
     }
 
@@ -66,18 +67,20 @@ public class BotBusinessServices {
                 .map(feature -> new GetFeaturesResponse(device.getName(), feature.getName()));
     }
 
-    private Multi<GetCommandsResponse> mapCommandsByFeature(Feature feature) {
-        return this.actionRepository.getDeviceActions(feature.getId())
-                .map(action -> new GetCommandsResponse(feature.getName(), action.getName()))
-                .flatMap(getCommandsResponse -> this.setDeviceName(feature.getDeviceId(), getCommandsResponse));
-    }
-
-    private Multi<GetCommandsResponse> setDeviceName(UUID deviceId, GetCommandsResponse getCommandsResponse) {
-        return this.deviceRepository.getDeviceById(deviceId)
-                .map(device -> {
-                    getCommandsResponse.setDeviceName(device.getName());
-                    return getCommandsResponse;
-                })
-                .toMulti();
+    private Uni<GetCommandsResponse> mapCommandsByDevice(Device device, String featureName) {
+        return this.featureRepository.getFeatureByDeviceAndFeatureName(device.getId(), featureName)
+                .flatMap(feature -> {
+                    if (feature == null) {
+                        return Uni.createFrom().nullItem();
+                    }
+                    var getCommandsResponse = new GetCommandsResponse(feature.getName(), featureName);
+                    return this.actionRepository.getDeviceActions(feature.getId())
+                            .map(Action::getName)
+                            .collectItems().asList()
+                            .map(actions -> {
+                                getCommandsResponse.getCommands().addAll(actions);
+                                return getCommandsResponse;
+                            });
+                });
     }
 }

@@ -68,6 +68,22 @@ public class DeviceRepository {
                 .map(Device::new);
     }
 
+    public Uni<Device> getDeviceByName(String name) {
+        var query = """
+                select *
+                from devices
+                where name = $1
+                """;
+        var params = Tuple.of(name);
+        return this.pgPool.preparedQuery(query).execute(params)
+                .map(RowSet::iterator)
+                .map(rowRowIterator ->
+                        rowRowIterator.hasNext()
+                                ? new Device(rowRowIterator.next())
+                                : null
+                );
+    }
+
     public Uni<Device> saveDevice(Device device) {
         var query = """
                 insert into devices (id, circuit_id, name, feedback_topic, alexa_slot_id, color_code) 
