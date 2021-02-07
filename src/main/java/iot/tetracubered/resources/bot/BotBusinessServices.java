@@ -55,6 +55,7 @@ public class BotBusinessServices {
                     if (triggerTopic == null) {
                         return Uni.createFrom().nullItem();
                     }
+                    // ToDo before run action, check if the device is online
                     return this.eventBus.<Boolean>request("query-action", triggerTopic)
                             .map(Message::body);
                 });
