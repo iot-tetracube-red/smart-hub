@@ -1,6 +1,9 @@
 package iot.tetracubered.resources.bot;
 
 import io.smallrye.mutiny.Multi;
+import io.smallrye.mutiny.Uni;
+import io.vertx.mutiny.core.eventbus.EventBus;
+import io.vertx.mutiny.core.eventbus.Message;
 import iot.tetracubered.data.entities.Device;
 import iot.tetracubered.data.entities.Feature;
 import iot.tetracubered.data.repositories.ActionRepository;
@@ -11,6 +14,7 @@ import iot.tetracubered.resources.bot.payloads.GetFeaturesResponse;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.ws.rs.NotFoundException;
 import java.util.UUID;
 
 @ApplicationScoped
@@ -24,6 +28,9 @@ public class BotBusinessServices {
 
     @Inject
     ActionRepository actionRepository;
+
+    @Inject
+    EventBus eventBus;
 
     public Multi<GetFeaturesResponse> getFeatures() {
         return this.deviceRepository.getDevices()
@@ -39,6 +46,17 @@ public class BotBusinessServices {
                         return Multi.createFrom().nothing();
                     }
                     return this.mapCommandsByFeature(feature);
+                });
+    }
+
+    public Uni<Boolean> runDeviceFeatureAction(String deviceName, String featureName, String actionName) {
+        return this.actionRepository.getActionTriggerTopicByName(deviceName, featureName, actionName)
+                .flatMap(triggerTopic -> {
+                    if (triggerTopic == null) {
+                        return Uni.createFrom().nullItem();
+                    }
+                    return this.eventBus.<Boolean>request("query-action", triggerTopic)
+                            .map(Message::body);
                 });
     }
 

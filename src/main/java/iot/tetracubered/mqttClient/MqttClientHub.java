@@ -52,7 +52,7 @@ public class MqttClientHub {
     @ConsumeEvent("query-action")
     public Boolean queryAction(String topic) {
         try {
-            this.mqttClient.publish(topic, "1".getBytes(), 2, false);
+            this.mqttClient.publish(topic, "1".getBytes(), 0, false);
             return true;
         } catch (MqttException e) {
             return false;
