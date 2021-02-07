@@ -18,6 +18,24 @@ public class FeatureRepository {
     @Inject
     PgPool pgPool;
 
+    public Uni<Feature> getFeatureByDeviceAndFeatureName(String deviceName,
+                                                         String featureName) {
+        var query = """
+                select *
+                from features f
+                inner join devices d on d.id = f.device_id
+                where d.name = $1 and f.name = $2
+                """;
+        var queryParameters = Tuple.of(deviceName, featureName);
+        return this.pgPool.preparedQuery(query).execute(queryParameters)
+                .map(RowSet::iterator)
+                .map(rowRowIterator ->
+                        rowRowIterator.hasNext()
+                         ? new Feature(rowRowIterator.next())
+                         : null
+                );
+    }
+
     public Multi<Feature> getDeviceFeatures(UUID deviceId) {
         var query = """
                 select *

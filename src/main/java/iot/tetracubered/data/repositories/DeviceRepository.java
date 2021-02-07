@@ -55,6 +55,19 @@ public class DeviceRepository {
                 .map(Device::new);
     }
 
+    public Uni<Device> getDeviceById(UUID id) {
+        var query = """
+                select *
+                from devices
+                where id = $1
+                """;
+        var params = Tuple.of(id);
+        return this.pgPool.preparedQuery(query).execute(params)
+                .map(RowSet::iterator)
+                .map(RowIterator::next)
+                .map(Device::new);
+    }
+
     public Uni<Device> saveDevice(Device device) {
         var query = """
                 insert into devices (id, circuit_id, name, feedback_topic, alexa_slot_id, color_code) 
