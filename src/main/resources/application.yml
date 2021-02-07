@@ -12,6 +12,13 @@ quarkus:
     cors: true
     port: 8080
     host: 0.0.0.0
+  smallrye-openapi:
+    enable: true
+    path: /docs
+  swagger-ui:
+    enable: true
+    always-include: true
+    path: /docs-ui
 smart-hub:
   mqtt-client:
     host: ${BROKER_HOST}

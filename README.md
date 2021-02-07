@@ -80,3 +80,8 @@ If you want to learn more about building native executables, please consult http
   ]
 }
 ```
+
+* GET /bot/features list of devices with names and features names
+* GET /bot/devices/{name}/features/{name}/commands the list of the commands by given feature's name
+* PATCH /bot/devices/features/command {device name, feature name, command name, reference id, source: TELEGRAM|ALEXA}
+* when the process finishes then call an hook {reference id, source, value, device name, feature name}
