@@ -6,7 +6,6 @@ import io.vertx.mutiny.core.eventbus.EventBus;
 import io.vertx.mutiny.core.eventbus.Message;
 import iot.tetracubered.data.entities.Action;
 import iot.tetracubered.data.entities.Device;
-import iot.tetracubered.data.entities.Feature;
 import iot.tetracubered.data.repositories.ActionRepository;
 import iot.tetracubered.data.repositories.DeviceRepository;
 import iot.tetracubered.data.repositories.FeatureRepository;
@@ -15,8 +14,6 @@ import iot.tetracubered.resources.bot.payloads.GetFeaturesResponse;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.ws.rs.NotFoundException;
-import java.util.UUID;
 
 @ApplicationScoped
 public class BotBusinessServices {
@@ -31,15 +28,22 @@ public class BotBusinessServices {
     ActionRepository actionRepository;
 
     @Inject
+    BotRepository botRepository;
+
+    @Inject
     EventBus eventBus;
 
     public Multi<GetFeaturesResponse> getFeatures() {
-        return this.deviceRepository.getDevices()
-                .flatMap(this::collectFeaturePerDevice);
+        return this.botRepository.getDevicesAndFeaturesNames()
+                .map(row -> new GetFeaturesResponse(
+                                row.getString("device_name"),
+                                row.getString("feature_name")
+                        )
+                );
     }
 
     public Uni<GetCommandsResponse> getCommandsByDeviceAndFeature(String deviceName,
-                                                                    String featureName) {
+                                                                  String featureName) {
         return this.deviceRepository.getDeviceByName(deviceName)
                 .flatMap(device -> {
                     if (device == null) {
@@ -60,11 +64,6 @@ public class BotBusinessServices {
                     return this.eventBus.<Boolean>request("query-action", triggerTopic)
                             .map(Message::body);
                 });
-    }
-
-    private Multi<GetFeaturesResponse> collectFeaturePerDevice(Device device) {
-        return this.featureRepository.getDeviceFeatures(device.getId())
-                .map(feature -> new GetFeaturesResponse(device.getName(), feature.getName()));
     }
 
     private Uni<GetCommandsResponse> mapCommandsByDevice(Device device, String featureName) {
