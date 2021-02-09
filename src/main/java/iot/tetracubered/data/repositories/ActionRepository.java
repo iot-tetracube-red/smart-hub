@@ -61,8 +61,8 @@ public class ActionRepository {
 
     public Uni<Action> saveAction(Action action) {
         var query = """
-                insert into actions(id, action_id, trigger_topic, name, alexa_intent, feature_id) 
-                values ($1, $2, $3, $4, null, $5)
+                insert into actions(id, action_id, trigger_topic, name, feature_id) 
+                values ($1, $2, $3, $4, $5)
                 returning *
                 """;
         var queryParameters = Tuple.of(

@@ -13,7 +13,6 @@ public class Device {
     private final String name;
     private final Boolean isOnline;
     private final String feedbackTopic;
-    private final String alexaSlotId;
     private final String colorCode;
     private final List<Feature> features;
 
@@ -27,7 +26,6 @@ public class Device {
         this.name = name;
         this.isOnline = isOnline;
         this.feedbackTopic = feedbackTopic;
-        this.alexaSlotId = null;
         this.colorCode = null;
         this.features = new ArrayList<>();
     }
@@ -38,7 +36,6 @@ public class Device {
         this.name = row.getString("name");
         this.isOnline = row.getBoolean("is_online");
         this.feedbackTopic = row.getString("feedback_topic");
-        this.alexaSlotId = row.getString("alexa_slot_id");
         this.colorCode = row.getString("color_code");
         this.features = new ArrayList<>();
     }
@@ -61,10 +58,6 @@ public class Device {
 
     public String getFeedbackTopic() {
         return feedbackTopic;
-    }
-
-    public String getAlexaSlotId() {
-        return alexaSlotId;
     }
 
     public List<Feature> getFeatures() {

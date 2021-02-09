@@ -67,12 +67,12 @@ If you want to learn more about building native executables, please consult http
       "actions": [
         {
           "id": "3253f251-3ab3-4987-8cdf-aa686de2b52b",
-          "name": "Turn ON",
+          "name": "TURN_ON",
           "trigger_topic": "devices/ce694f72-c12b-4e19-aa80-c3af37898615/feature/3253f251-3ab3-4987-8cdf-aa686de2b52b"
         },
         {
           "id": "7bb7f58e-68e3-4589-bbaf-e8e23b78e80a",
-          "name": "Turn OFF",
+          "name": "TURN_OFF",
           "trigger_topic": "devices/ce694f72-c12b-4e19-aa80-c3af37898615/feature/7bb7f58e-68e3-4589-bbaf-e8e23b78e80a"
         }
       ]

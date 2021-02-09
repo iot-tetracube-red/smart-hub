@@ -10,7 +10,6 @@ public class Action {
     private final UUID actionId;
     private final String triggerTopic;
     private final String name;
-    private final String alexaIntent;
     private final UUID featureId;
 
     public Action(UUID id,
@@ -23,7 +22,6 @@ public class Action {
         this.triggerTopic = triggerTopic;
         this.name = name;
         this.featureId = featureId;
-        this.alexaIntent = null;
     }
 
     public Action(Row row) {
@@ -31,7 +29,6 @@ public class Action {
         this.actionId = row.getUUID("action_id");
         this.name = row.getString("name");
         this.triggerTopic = row.getString("trigger_topic");
-        this.alexaIntent = row.getString("alexa_intent");
         this.featureId = row.getUUID("feature_id");
     }
 
@@ -49,10 +46,6 @@ public class Action {
 
     public String getName() {
         return name;
-    }
-
-    public String getAlexaIntent() {
-        return alexaIntent;
     }
 
     public UUID getFeatureId() {

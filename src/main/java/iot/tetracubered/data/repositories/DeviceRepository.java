@@ -86,8 +86,8 @@ public class DeviceRepository {
 
     public Uni<Device> saveDevice(Device device) {
         var query = """
-                insert into devices (id, circuit_id, name, feedback_topic, alexa_slot_id, color_code) 
-                VALUES ($1, $2, $3, $4, null, null)
+                insert into devices (id, circuit_id, name, feedback_topic, color_code) 
+                VALUES ($1, $2, $3, $4, null)
                 returning *
                 """;
         var params = Tuple.of(
