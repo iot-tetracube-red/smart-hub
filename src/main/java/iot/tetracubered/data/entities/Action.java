@@ -1,54 +1,76 @@
 package iot.tetracubered.data.entities;
 
-import io.vertx.mutiny.sqlclient.Row;
+import io.smallrye.common.constraint.NotNull;
 
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.Id;
+import javax.persistence.ManyToOne;
+import javax.validation.constraints.NotEmpty;
 import java.util.UUID;
 
+@Entity(name = "actions")
 public class Action {
 
-    private final UUID id;
-    private final UUID actionId;
-    private final String triggerTopic;
-    private final String name;
-    private final UUID featureId;
+    @Id
+    private UUID id;
 
-    public Action(UUID id,
-                  UUID actionId,
+    @NotNull
+    private UUID actionId;
+
+    @NotNull
+    @NotEmpty
+    private String triggerTopic;
+
+    @NotNull
+    @NotEmpty
+    private String name;
+
+    @ManyToOne(targetEntity = Feature.class, fetch = FetchType.LAZY)
+    private Feature feature;
+
+    public Action() {
+    }
+
+    public Action(UUID actionId,
                   String triggerTopic,
                   String name,
                   UUID featureId) {
-        this.id = id;
+        this.id = UUID.randomUUID();
         this.actionId = actionId;
         this.triggerTopic = triggerTopic;
         this.name = name;
-        this.featureId = featureId;
-    }
-
-    public Action(Row row) {
-        this.id = row.getUUID("id");
-        this.actionId = row.getUUID("action_id");
-        this.name = row.getString("name");
-        this.triggerTopic = row.getString("trigger_topic");
-        this.featureId = row.getUUID("feature_id");
     }
 
     public UUID getId() {
         return id;
     }
 
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
     public UUID getActionId() {
         return actionId;
+    }
+
+    public void setActionId(UUID actionId) {
+        this.actionId = actionId;
     }
 
     public String getTriggerTopic() {
         return triggerTopic;
     }
 
+    public void setTriggerTopic(String triggerTopic) {
+        this.triggerTopic = triggerTopic;
+    }
+
     public String getName() {
         return name;
     }
 
-    public UUID getFeatureId() {
-        return featureId;
+    public void setName(String name) {
+        this.name = name;
     }
 }

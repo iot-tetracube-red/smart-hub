@@ -1,6 +1,6 @@
-package iot.tetracubered.mqttClient.services;
+package iot.tetracubered.iotMessaging.deviceProvisioning.services;
 
-import io.quarkus.vertx.ConsumeEvent;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import iot.tetracubered.data.entities.Action;
@@ -9,16 +9,16 @@ import iot.tetracubered.data.entities.Feature;
 import iot.tetracubered.data.repositories.ActionRepository;
 import iot.tetracubered.data.repositories.DeviceRepository;
 import iot.tetracubered.data.repositories.FeatureRepository;
-import iot.tetracubered.mqttClient.payloads.DeviceFeatureActionProvisioningPayload;
-import iot.tetracubered.mqttClient.payloads.DeviceFeatureProvisioningPayload;
-import iot.tetracubered.mqttClient.payloads.DeviceProvisioningPayload;
+import iot.tetracubered.iotMessaging.deviceProvisioning.payloads.DeviceFeatureActionProvisioningPayload;
+import iot.tetracubered.iotMessaging.deviceProvisioning.payloads.DeviceFeatureProvisioningPayload;
+import iot.tetracubered.iotMessaging.deviceProvisioning.payloads.DeviceProvisioningPayload;
+import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.util.List;
-import java.util.UUID;
 
 @ApplicationScoped
 public class DeviceProvisioningService {
@@ -32,16 +32,26 @@ public class DeviceProvisioningService {
     @Inject
     ActionRepository actionRepository;
 
+    @Inject
+    ObjectMapper objectMapper;
+
     private final static Logger LOGGER = LoggerFactory.getLogger(DeviceProvisioningService.class);
 
-    @ConsumeEvent("device-provisioning")
-    public void deviceProvisioning(DeviceProvisioningPayload deviceProvisioningPayload) {
+    @Incoming("devices-provisioning")
+    public void deviceProvisioning(byte[] payload) {
+        DeviceProvisioningPayload deviceProvisioningPayload;
+        try {
+            deviceProvisioningPayload = this.objectMapper.readValue(new String(payload), DeviceProvisioningPayload.class);
+        } catch (Exception ex) {
+            LOGGER.info("Cannot read payload content, ignoring it");
+            return;
+        }
+
         LOGGER.info("Trying to store device with circuit id: " + deviceProvisioningPayload.getId());
 
         var deviceUni = this.deviceRepository.existsByCircuitId(deviceProvisioningPayload.getId())
                 .flatMap(deviceExists -> {
                     var device = new Device(
-                            UUID.randomUUID(),
                             deviceProvisioningPayload.getId(),
                             deviceProvisioningPayload.getName(),
                             true,
@@ -65,7 +75,6 @@ public class DeviceProvisioningService {
                     var storedFeatureUni = this.featureRepository.existsByDeviceAndFeatureId(device.getCircuitId(), feature.getFeatureId())
                             .flatMap(featureExists -> {
                                 var newFeature = new Feature(
-                                        UUID.randomUUID(),
                                         feature.getFeatureId(),
                                         feature.getName(),
                                         feature.getFeatureType(),
@@ -96,7 +105,6 @@ public class DeviceProvisioningService {
 
                                             LOGGER.info("Storing the new action");
                                             var action = new Action(
-                                                    UUID.randomUUID(),
                                                     actionToStore.getActionId(),
                                                     actionToStore.getTriggerTopic(),
                                                     actionToStore.getName(),

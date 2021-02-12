@@ -1,4 +1,4 @@
-package iot.tetracubered.mqttClient.payloads;
+package iot.tetracubered.iotMessaging.deviceProvisioning.payloads;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

@@ -2,19 +2,22 @@ package iot.tetracubered.resources.bot.payloads;
 
 public class GetFeaturesResponse {
 
-    private final String deviceName;
-    private final String featureName;
-
-    public GetFeaturesResponse(String deviceName, String featureName) {
-        this.deviceName = deviceName;
-        this.featureName = featureName;
-    }
+    private String deviceName;
+    private String featureName;
 
     public String getDeviceName() {
         return deviceName;
     }
 
+    public void setDeviceName(String deviceName) {
+        this.deviceName = deviceName;
+    }
+
     public String getFeatureName() {
         return featureName;
+    }
+
+    public void setFeatureName(String featureName) {
+        this.featureName = featureName;
     }
 }

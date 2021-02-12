@@ -1,98 +1,45 @@
 package iot.tetracubered.data.repositories;
 
+import io.quarkus.hibernate.reactive.panache.PanacheRepository;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
-import io.vertx.mutiny.pgclient.PgPool;
-import io.vertx.mutiny.sqlclient.RowIterator;
-import io.vertx.mutiny.sqlclient.RowSet;
-import io.vertx.mutiny.sqlclient.Tuple;
 import iot.tetracubered.data.entities.Feature;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
+import java.util.List;
 import java.util.UUID;
 
 @ApplicationScoped
-public class FeatureRepository {
+public class FeatureRepository implements PanacheRepository<Feature> {
 
-    @Inject
-    PgPool pgPool;
+    public Multi<Feature> getAllFeatures() {
+        return this.listAll()
+                .onItem()
+                .transformToMulti(features -> Multi.createFrom().items(features.stream()));
+    }
 
     public Uni<Feature> getFeatureByDeviceAndFeatureName(UUID deviceId,
                                                          String featureName) {
-        var query = """
-                select *
-                from features f
-                inner join devices d on d.id = f.device_id
-                where d.id = $1 and f.name = $2
-                """;
-        var queryParameters = Tuple.of(deviceId, featureName);
-        return this.pgPool.preparedQuery(query).execute(queryParameters)
-                .map(RowSet::iterator)
-                .map(rowRowIterator ->
-                        rowRowIterator.hasNext()
-                         ? new Feature(rowRowIterator.next())
-                         : null
-                );
+        return this.find("where d.id = $1 and f.name = $2", deviceId, featureName)
+                .firstResult();
     }
 
-    public Multi<Feature> getDeviceFeatures(UUID deviceId) {
-        var query = """
-                select *
-                from features
-                where device_id = $1
-                """;
-        var queryParameters = Tuple.of(deviceId);
-        return this.pgPool.preparedQuery(query).execute(queryParameters)
-                .onItem().transformToMulti(rows -> Multi.createFrom().iterable(rows))
-                .map(Feature::new)
-                .onFailure().invoke(Throwable::printStackTrace);
+    public Uni<List<Feature>> getDeviceFeatures(UUID deviceId) {
+        return this.find("device_id", deviceId)
+                .list();
     }
 
     public Uni<Boolean> existsByDeviceAndFeatureId(UUID circuitId, UUID featureId) {
-        var query = """
-                select count(features.id) > 0 as exists
-                from features
-                inner join devices d on d.id = features.device_id
-                where d.circuit_id = $1 and features.feature_id = $2
-                """;
-        var queryParameters = Tuple.of(circuitId, featureId);
-        return this.pgPool.preparedQuery(query).execute(queryParameters)
-                .map(RowSet::iterator)
-                .map(rowRowIterator -> rowRowIterator.next().getBoolean("exists"));
+        return this.count("where d.circuit_id = ?1 and features.feature_id = ?2", circuitId, featureId)
+                .map(foundFeatures -> foundFeatures == 1);
     }
 
     public Uni<Feature> getFeatureByDeviceAndFeatureId(UUID circuitId, UUID featureId) {
-        var query = """
-                select *
-                from features
-                inner join devices d on d.id = features.device_id
-                where d.circuit_id = $1 and features.feature_id = $2
-                """;
-        var queryParameters = Tuple.of(circuitId, featureId);
-        return this.pgPool.preparedQuery(query).execute(queryParameters)
-                .map(RowSet::iterator)
-                .map(RowIterator::next)
-                .map(Feature::new);
+        return this.find("where d.circuit_id = ?1 and features.feature_id = ?2", circuitId, featureId)
+                .firstResult();
     }
 
     public Uni<Feature> saveFeature(Feature feature) {
-        var query = """
-                insert into features(id, feature_id, name, feature_type, current_value, device_id) 
-                VALUES ($1, $2, $3, $4, $5, $6)
-                returning *
-                """;
-        var queryParameters = Tuple.of(
-                feature.getId(),
-                feature.getFeatureId(),
-                feature.getName(),
-                feature.getFeatureType().toString(),
-                feature.getCurrentValue(),
-                feature.getDeviceId()
-        );
-        return this.pgPool.preparedQuery(query).execute(queryParameters)
-                .map(RowSet::iterator)
-                .map(RowIterator::next)
-                .map(Feature::new);
+        return this.saveFeature(feature);
     }
 }

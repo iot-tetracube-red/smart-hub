@@ -19,12 +19,17 @@ quarkus:
     enable: true
     always-include: true
     path: /docs-ui
+mp:
+  messaging:
+    incoming:
+      devices-provisioning:
+        type: smallrye-mqtt
+        topic: devices/provisioning
+        host: ${BROKER_HOST}
+        port: ${BROKER_PORT}
+        auto-generated-client-id: true
+        username: ${BROKER_USER}
+        password: ${BROKER_PASSWORD}
 smart-hub:
-  mqtt-client:
-    host: ${BROKER_HOST}
-    port: ${BROKER_PORT}
-    client-id: smart-hub-client
-    user-name: ${BROKER_USER}
-    password: ${BROKER_PASSWORD}
     topics:
       device-provisioning: devices/provisioning
