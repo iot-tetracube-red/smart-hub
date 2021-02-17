@@ -13,7 +13,7 @@ quarkus:
     reactive:
       url: postgresql://${DB_HOST}:5432/${DB_NAME}
   http:
-    cors: true
+    # cors: true
     port: 8080
     host: 0.0.0.0
   smallrye-openapi:
@@ -23,6 +23,8 @@ quarkus:
     enable: true
     always-include: true
     path: /docs-ui
+  log:
+    level: DEBUG
 mp:
   messaging:
     incoming:
