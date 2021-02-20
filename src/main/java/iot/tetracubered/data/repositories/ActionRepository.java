@@ -16,14 +16,14 @@ public class ActionRepository {
     @Inject
     Session hibernateReactiveSession;
 
-    public Multi<Action> getDeviceActions(UUID featureId) {
-        var query = """
-                select *
-                from actions
-                where feature_id = :featureId
-                """;
-        var preparedQuery = hibernateReactiveSession.createNativeQuery(query, Action.class);
-        preparedQuery.setParameter("featureId", featureId);
-        return preparedQuery.getResults();
+    public Multi<Action> getFeatureActions(UUID featureId) {
+        return hibernateReactiveSession.createNativeQuery(
+                "from actions where feature_id = :featureId",
+                Action.class
+        )
+                .setParameter("featureId", featureId)
+                .getResults();
     }
+
+    public Multi<Action>
 }

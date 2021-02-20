@@ -1,5 +1,6 @@
 package iot.tetracubered.data.entities;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -9,7 +10,7 @@ import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 
-@Entity
+@Entity(name = "devices")
 public class Device {
 
     @Id
@@ -31,10 +32,24 @@ public class Device {
     private String colorCode;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "device", targetEntity = Feature.class)
-    private List<Feature> features;
+    private List<Feature> features = new ArrayList<>();
 
     public Device() {
+    }
 
+    public Device(UUID id,
+                  UUID circuitId,
+                  String name,
+                  Boolean isOnline,
+                  String feedbackTopic,
+                  String colorCode) {
+        this.id = id;
+        this.circuitId = circuitId;
+        this.name = name;
+        this.isOnline = isOnline;
+        this.feedbackTopic = feedbackTopic;
+        this.colorCode = colorCode;
+        this.features = new ArrayList<>();
     }
 
     public UUID getCircuitId() {

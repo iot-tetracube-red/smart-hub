@@ -16,7 +16,7 @@ import javax.persistence.OneToMany;
 import iot.tetracubered.enumerations.FeatureType;
 import iot.tetracubered.enumerations.RequestSourceType;
 
-@Entity
+@Entity(name = "features")
 public class Feature {
 
     @Id
@@ -53,6 +53,28 @@ public class Feature {
 
     public Feature() {
 
+    }
+
+    public Feature(UUID id,
+                   UUID featureId,
+                   String name,
+                   FeatureType featureType,
+                   Float currentValue,
+                   Device device,
+                   Boolean isRunning,
+                   RequestSourceType sourceType,
+                   String runningReferenceId,
+                   List<Action> actions) {
+        this.id = id;
+        this.featureId = featureId;
+        this.name = name;
+        this.featureType = featureType;
+        this.currentValue = currentValue;
+        this.device = device;
+        this.isRunning = isRunning;
+        this.sourceType = sourceType;
+        this.runningReferenceId = runningReferenceId;
+        this.actions = actions;
     }
 
     public List<Action> getActions() {

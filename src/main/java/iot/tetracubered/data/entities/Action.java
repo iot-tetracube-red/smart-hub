@@ -9,7 +9,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
-@Entity
+@Entity(name = "actions")
 public class Action {
 
     @Id
@@ -30,6 +30,14 @@ public class Action {
 
     public Action() {
 
+    }
+
+    public Action(UUID id, UUID actionId, String triggerTopic, String name, Feature feature) {
+        this.id = id;
+        this.actionId = actionId;
+        this.triggerTopic = triggerTopic;
+        this.name = name;
+        this.feature = feature;
     }
 
     public UUID getActionId() {
