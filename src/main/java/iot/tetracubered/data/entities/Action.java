@@ -1,43 +1,38 @@
 package iot.tetracubered.data.entities;
 
+import io.vertx.mutiny.sqlclient.Row;
+
 import java.util.UUID;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
+public class Action implements BaseEntity {
 
-@Entity(name = "actions")
-public class Action {
-
-    @Id
     private UUID id;
-
-    @Column(name = "action_id", nullable = false, unique = true)
     private UUID actionId;
-
-    @Column(name = "trigger_topic", nullable = false, unique = true)
     private String triggerTopic;
-
-    @Column(name = "name", nullable = false)
     private String name;
 
-    @JoinColumn(name = "feature_id", nullable = false)
-    @ManyToOne(fetch = FetchType.LAZY, targetEntity = Feature.class)
+    // External references
     private Feature feature;
 
-    public Action() {
-
+    public static Action generateNewAction(UUID actionId,
+                                           String triggerTopic,
+                                           String name,
+                                           Feature feature) {
+        var action = new Action();
+        action.id = UUID.randomUUID();
+        action.actionId = actionId;
+        action.triggerTopic = triggerTopic;
+        action.name = name;
+        action.feature = feature;
+        return action;
     }
 
-    public Action(UUID id, UUID actionId, String triggerTopic, String name, Feature feature) {
-        this.id = id;
-        this.actionId = actionId;
-        this.triggerTopic = triggerTopic;
-        this.name = name;
-        this.feature = feature;
+    @Override
+    public void populateFromRow(Row row) {
+        this.id = row.getUUID("id");
+        this.actionId = row.getUUID("action_id");
+        this.triggerTopic = row.getString("trigger_topic");
+        this.name = row.getString("name");
     }
 
     public UUID getActionId() {

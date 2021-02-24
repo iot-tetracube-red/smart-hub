@@ -19,9 +19,9 @@ import io.smallrye.mutiny.Multi;
 @OpenAPIDefinition(info = @Info(title = "Bot APIs",
         description = "APIs to serve data to bots middleware", version = "1.0.0"))
 @Tag(name = "Bot", description = "APIs to serve data to bots middleware")
-@Path("/bot")
+//@Path("/bot")
 public class BotResources {
-
+/*
     @Inject
     BotBusinessServices botBusinessServices;
 
@@ -54,5 +54,5 @@ public class BotResources {
                         );
                     }
                 });
-    }
+    }*/
 }

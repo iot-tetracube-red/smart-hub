@@ -29,7 +29,7 @@ public class BotBusinessServices {
 
     @Inject
     ActionRepository actionRepository;
-
+/*
     public Multi<GetDeviceFeatureResponse> getUserDevicesAndFeatures() {
         return this.deviceRepository.getDevices()
                 .flatMap(device ->
@@ -86,5 +86,5 @@ public class BotBusinessServices {
                         return response;
                     });
         });
-    }
+    }*/
 }

@@ -1,23 +1,62 @@
 package iot.tetracubered.data.repositories;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-
 import io.smallrye.mutiny.Uni;
-import org.hibernate.reactive.mutiny.Mutiny.Session;
-
-import io.smallrye.mutiny.Multi;
+import io.vertx.mutiny.sqlclient.RowIterator;
+import io.vertx.mutiny.sqlclient.RowSet;
+import io.vertx.mutiny.sqlclient.Tuple;
 import iot.tetracubered.data.entities.Device;
 
+import javax.enterprise.context.ApplicationScoped;
 import java.util.UUID;
 
 @ApplicationScoped
-public class DeviceRepository {
+public class DeviceRepository extends BaseRepository {
 
-    @Inject
-    Session hibernateReactiveSession;
+    public Uni<Boolean> existsByCircuitId(UUID circuitId) {
+        var query = """
+                select count(id) > 0 as exists
+                from devices
+                where circuit_id = $1
+                """;
+        var parameters = Tuple.of(circuitId);
+        return this.pgPool.preparedQuery(query).execute(parameters)
+                .map(RowSet::iterator)
+                .map(RowIterator::next)
+                .map(row -> row.getBoolean("exists"));
+    }
 
-    public Multi<Device> getDevices() {
+    public Uni<Device> storeDevice(Device device) {
+        var query = """
+                insert into devices (id, circuit_id, name, is_online, feedback_topic, color_code) 
+                VALUES($1, $2, $3, $4, $5, $6)
+                """;
+        var parameters = Tuple.of(
+                device.getId(),
+                device.getCircuitId(),
+                device.getName(),
+                device.getIsOnline(),
+                device.getFeedbackTopic(),
+                device.getColorCode()
+        );
+        return this.pgPool.preparedQuery(query).execute(parameters)
+                .chain(() -> this.getDeviceByCircuitId(device.getCircuitId()));
+    }
+
+    public Uni<Device> getDeviceByCircuitId(UUID circuitId) {
+        var query = """
+                select *
+                from devices
+                where circuit_id = $1
+                """;
+        var parameters = Tuple.of(circuitId);
+        return this.pgPool.preparedQuery(query).execute(parameters)
+                .stage(rowSetUni -> {
+                    var device = new Device();
+                    return this.mapRowToObject(rowSetUni, device);
+                });
+    }
+
+   /* public Multi<Device> getDevices() {
         var queryStatement = this.hibernateReactiveSession.createQuery("from devices", Device.class);
         return queryStatement.getResults();
     }
@@ -31,29 +70,9 @@ public class DeviceRepository {
                 .getSingleResultOrNull();
     }
 
-    public Uni<Boolean> existsByCircuitId(UUID circuitId) {
-        return this.hibernateReactiveSession.createNativeQuery("""
-                select count(id) > 0 as exists
-                from devices
-                where circuit_id = :circuitId
-                """,
-                Boolean.class
-        )
-                .setParameter("circuitId", circuitId)
-                .getSingleResult();
-    }
 
-    public Uni<Device> storeDevice(Device device) {
-        return this.hibernateReactiveSession.persist(device)
-                .chain(() -> this.getDeviceById(device.getCircuitId()));
-    }
 
-    public Uni<Device> getDeviceById(UUID circuitId) {
-        return this.hibernateReactiveSession.createQuery(
-                "from devices where circuit_id = :circuitId",
-                Device.class
-        )
-                .setParameter("circuitId", circuitId)
-                .getSingleResult();
-    }
+
+
+*/
 }

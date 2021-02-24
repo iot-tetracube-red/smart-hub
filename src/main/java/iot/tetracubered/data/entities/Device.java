@@ -1,55 +1,50 @@
 package iot.tetracubered.data.entities;
 
+import io.vertx.mutiny.sqlclient.Row;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.UUID;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
+public class Device implements BaseEntity {
 
-@Entity(name = "devices")
-public class Device {
-
-    @Id
     private UUID id;
-
-    @Column(name = "circuit_id", nullable = false, unique = true)
     private UUID circuitId;
-
-    @Column(name = "name", nullable = false, unique = true)
     private String name;
-
-    @Column(name = "is_online", nullable = false)
     private Boolean isOnline;
-
-    @Column(name = "feedback_topic", nullable = false)
     private String feedbackTopic;
-
-    @Column(name = "color_code")
     private String colorCode;
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "device", targetEntity = Feature.class)
+    // External references
     private List<Feature> features = new ArrayList<>();
 
-    public Device() {
+    public static Device generateNewDevice(UUID circuitId,
+                                           String name,
+                                           String feedbackTopic) {
+        var device = new Device();
+        device.id = UUID.randomUUID();
+        device.circuitId = circuitId;
+        device.name = name;
+        device.isOnline = true;
+        device.feedbackTopic = feedbackTopic;
+        device.features = new ArrayList<>();
+
+        var obj = new Random();
+        int rand_num = obj.nextInt(0xffffff + 1);
+        device.colorCode = String.format("#%06x", rand_num);
+
+        return device;
     }
 
-    public Device(UUID id,
-                  UUID circuitId,
-                  String name,
-                  Boolean isOnline,
-                  String feedbackTopic,
-                  String colorCode) {
-        this.id = id;
-        this.circuitId = circuitId;
-        this.name = name;
-        this.isOnline = isOnline;
-        this.feedbackTopic = feedbackTopic;
-        this.colorCode = colorCode;
-        this.features = new ArrayList<>();
+    @Override
+    public void populateFromRow(Row row) {
+        this.id = row.getUUID("id");
+        this.circuitId = row.getUUID("circuit_id");
+        this.name = row.getString("name");
+        this.isOnline = row.getBoolean("is_online");
+        this.feedbackTopic = row.getString("feedback_topic");
+        this.colorCode = row.getString("color_code");
     }
 
     public UUID getCircuitId() {

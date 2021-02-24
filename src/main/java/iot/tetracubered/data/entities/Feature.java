@@ -1,80 +1,59 @@
 package iot.tetracubered.data.entities;
 
-import java.util.List;
-import java.util.UUID;
-
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.FetchType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-
+import io.vertx.mutiny.sqlclient.Row;
 import iot.tetracubered.enumerations.FeatureType;
 import iot.tetracubered.enumerations.RequestSourceType;
 
-@Entity(name = "features")
-public class Feature {
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
-    @Id
+public class Feature implements BaseEntity {
+
     private UUID id;
-
-    @Column(name = "feature_id", nullable = false, unique = true)
     private UUID featureId;
-
-    @Column(name = "name", nullable = false)
     private String name;
-
-    @Enumerated(value = EnumType.STRING)
-    @Column(name = "feature_type", nullable = false)
     private FeatureType featureType;
-
-    @Column(name = "current_value", nullable = false)
     private Float currentValue;
-
-    @JoinColumn(name = "device_id", nullable = false)
-    @ManyToOne(fetch = FetchType.LAZY, targetEntity = Device.class)
-    private Device device;
-
-    @Column(name = "is_running")
     private Boolean isRunning;
-
-    @Column(name = "source_type")
     private RequestSourceType sourceType;
-
-    @Column(name = "running_reference_id")
     private String runningReferenceId;
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "feature", targetEntity = Action.class)
+    // External references
+    private Device device;
     private List<Action> actions;
 
-    public Feature() {
-
+    public static Feature generateNewDevice(UUID featureId,
+                                            String name,
+                                            FeatureType featureType,
+                                            Float currentValue,
+                                            Device device) {
+        var feature = new Feature();
+        feature.id = UUID.randomUUID();
+        feature.featureId = featureId;
+        feature.name = name;
+        feature.featureType = featureType;
+        feature.currentValue = currentValue;
+        feature.device = device;
+        feature.isRunning = false;
+        feature.sourceType = null;
+        feature.runningReferenceId = null;
+        feature.actions = new ArrayList<>();
+        return feature;
     }
 
-    public Feature(UUID id,
-                   UUID featureId,
-                   String name,
-                   FeatureType featureType,
-                   Float currentValue,
-                   Device device,
-                   Boolean isRunning,
-                   RequestSourceType sourceType,
-                   String runningReferenceId,
-                   List<Action> actions) {
-        this.id = id;
-        this.featureId = featureId;
-        this.name = name;
-        this.featureType = featureType;
-        this.currentValue = currentValue;
-        this.device = device;
-        this.isRunning = isRunning;
-        this.sourceType = sourceType;
-        this.runningReferenceId = runningReferenceId;
-        this.actions = actions;
+    @Override
+    public void populateFromRow(Row row) {
+        this.id = row.getUUID("id");
+        this.featureId = row.getUUID("feature_id");
+        this.name = row.getString("name");
+        this.featureType = FeatureType.valueOf(row.getString("feature_type"));
+        this.currentValue = row.getFloat("current_value");
+        this.isRunning = row.getBoolean("is_running");
+        this.runningReferenceId = row.getString("running_reference_id");
+        this.sourceType = row.getString("source_type") == null
+                ? null
+                : RequestSourceType.valueOf(row.getString("source_type"));
     }
 
     public List<Action> getActions() {
