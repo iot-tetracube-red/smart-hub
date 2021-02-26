@@ -1,14 +1,10 @@
 package iot.tetracubered.data.repositories;
 
 import io.smallrye.mutiny.Uni;
-import io.vertx.mutiny.pgclient.PgPool;
-import io.vertx.mutiny.sqlclient.RowSet;
 import io.vertx.mutiny.sqlclient.Tuple;
 import iot.tetracubered.data.entities.Action;
-import iot.tetracubered.data.entities.Feature;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 import java.util.UUID;
 
 @ApplicationScoped
@@ -32,6 +28,9 @@ public class ActionRepository extends BaseRepository {
 
     public Uni<Action> findActionByActionId(UUID actionId) {
         var query = """
+                select * 
+                from actions
+                where action_id = $1
                 """;
         var parameters = Tuple.of(actionId);
         return this.pgPool.preparedQuery(query).execute(parameters)

@@ -1,6 +1,8 @@
 package iot.tetracubered.data.repositories;
 
 import io.smallrye.mutiny.Uni;
+import io.vertx.mutiny.sqlclient.RowIterator;
+import io.vertx.mutiny.sqlclient.RowSet;
 import io.vertx.mutiny.sqlclient.Tuple;
 import iot.tetracubered.data.entities.Feature;
 
@@ -39,6 +41,19 @@ public class FeatureRepository extends BaseRepository {
                     var feature = new Feature();
                     return this.mapRowToObject(rowSetUni, feature);
                 });
+    }
+
+    public Uni<Boolean> existsByFeatureId(UUID featureId) {
+        var query = """
+                select count("id") > 0 as exists
+                from features
+                where feature_id = $1
+                """;
+        var parameters = Tuple.of(featureId);
+        return this.pgPool.preparedQuery(query).execute(parameters)
+                .map(RowSet::iterator)
+                .map(RowIterator::next)
+                .map(row -> row.getBoolean("exists"));
     }
 /*
     public Multi<Feature> getFeaturesByDeviceId(UUID deviceId) {

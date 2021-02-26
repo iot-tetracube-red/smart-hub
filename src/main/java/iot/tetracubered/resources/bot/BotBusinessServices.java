@@ -79,7 +79,7 @@ public class BotBusinessServices {
             }
             return this.actionRepository.getFeatureActions(featureId.get())
                     .map(Action::getName)
-                    .collectItems()
+                    .collect()
                     .asList()
                     .map(actionsName -> {
                         response.getCommands().addAll(actionsName);

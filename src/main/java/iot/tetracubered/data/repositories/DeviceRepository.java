@@ -42,6 +42,20 @@ public class DeviceRepository extends BaseRepository {
                 .chain(() -> this.getDeviceByCircuitId(device.getCircuitId()));
     }
 
+    public Uni<Device> updateDevice(UUID circuitId, Device device) {
+        var query = """
+                UPDATE devices SET is_online = $1, feedback_topic = $2
+                WHERE circuit_id = $3
+                """;
+        var parameters = Tuple.of(
+                device.getIsOnline(),
+                device.getFeedbackTopic(),
+                circuitId
+        );
+        return this.pgPool.preparedQuery(query).execute(parameters)
+                .chain(() -> this.getDeviceByCircuitId(circuitId));
+    }
+
     public Uni<Device> getDeviceByCircuitId(UUID circuitId) {
         var query = """
                 select *

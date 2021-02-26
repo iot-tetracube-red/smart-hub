@@ -2,7 +2,6 @@ package iot.tetracubered.iot.consumers;
 
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
-import io.smallrye.mutiny.tuples.Tuple2;
 import io.vertx.mutiny.core.eventbus.EventBus;
 import iot.tetracubered.data.entities.Action;
 import iot.tetracubered.data.entities.Device;
@@ -21,7 +20,6 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import java.util.List;
-import java.util.UUID;
 
 @ApplicationScoped
 public class DeviceProvisioningConsumer {
@@ -78,7 +76,7 @@ public class DeviceProvisioningConsumer {
                     );
                     return !deviceExists
                             ? this.deviceRepository.storeDevice(dbDeviceToStore)
-                            : this.deviceRepository.getDeviceByCircuitId(deviceProvisioningPayload.getId());
+                            : this.deviceRepository.updateDevice(deviceProvisioningPayload.getId(), dbDeviceToStore);
                 })
                 .flatMap(device ->
                         this.storeFeatures(device, deviceProvisioningPayload.getFeatures())
@@ -87,6 +85,9 @@ public class DeviceProvisioningConsumer {
 
     private Uni<Device> storeFeatures(Device device, List<DeviceFeatureProvisioningPayload> featuresPayload) {
         return Multi.createFrom().items(featuresPayload.parallelStream())
+                .call(feature -> {
+                    return this.featureRepository.existsByFeatureId(feature.getFeatureId());
+                })
                 .flatMap(feature -> {
                     var newFeature =  Feature.generateNewDevice(
                             feature.getFeatureId(),
@@ -97,10 +98,10 @@ public class DeviceProvisioningConsumer {
                     );
 
                     return this.featureRepository.storeFeature(newFeature)
-                            //.flatMap(dbFeature -> this.storeAction(dbFeature, feature.getActions()))
+                            .flatMap(dbFeature -> this.storeAction(dbFeature, feature.getActions()))
                             .toMulti();
                 })
-                .collectItems().asList()
+                .collect().asList()
                 .map(features -> {
                     device.setFeatures(features);
                     return device;
@@ -119,7 +120,7 @@ public class DeviceProvisioningConsumer {
                     return this.actionRepository.storeAction(action)
                             .toMulti();
                 })
-                .collectItems().asList()
+                .collect().asList()
                 .map(actions -> {
                     feature.setActions(actions);
                     return feature;
