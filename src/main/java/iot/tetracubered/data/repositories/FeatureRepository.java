@@ -21,9 +21,25 @@ public class FeatureRepository extends BaseRepository {
                 feature.getId(),
                 feature.getFeatureId(),
                 feature.getName(),
-                feature.getFeatureType(),
+                feature.getFeatureType().toString(),
                 feature.getCurrentValue(),
                 feature.getDevice().getId()
+        );
+        return this.pgPool.preparedQuery(query).execute(parameters)
+                .chain(() -> this.getFeatureById(feature.getFeatureId()));
+    }
+
+    public Uni<Feature> updateFeature( Feature feature) {
+        var query = """
+                update features set
+                feature_type = $1,
+                current_value = $2
+                where feature_id = $3
+                """;
+        var parameters = Tuple.of(
+                feature.getFeatureType().toString(),
+                feature.getCurrentValue(),
+                feature.getId()
         );
         return this.pgPool.preparedQuery(query).execute(parameters)
                 .chain(() -> this.getFeatureById(feature.getFeatureId()));

@@ -1,6 +1,7 @@
 package iot.tetracubered.data.repositories;
 
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.Multi;
 import io.vertx.mutiny.sqlclient.RowIterator;
 import io.vertx.mutiny.sqlclient.RowSet;
 import io.vertx.mutiny.sqlclient.Tuple;
@@ -70,11 +71,19 @@ public class DeviceRepository extends BaseRepository {
                 });
     }
 
-   /* public Multi<Device> getDevices() {
+   public Multi<Device> getDevices() {
+        var query = """
+                select *
+                from devices
+                """;
+        return this.pgPool.preparedQuery(query).execute()
+                .stage(rowSetUni -> {
+                    var
+                })
         var queryStatement = this.hibernateReactiveSession.createQuery("from devices", Device.class);
         return queryStatement.getResults();
     }
-
+/*
     public Uni<Device> getDeviceByName(String deviceName) {
         return this.hibernateReactiveSession.createQuery(
                 "from devices where name = :deviceName",

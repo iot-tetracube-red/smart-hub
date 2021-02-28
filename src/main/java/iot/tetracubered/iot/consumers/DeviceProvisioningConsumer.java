@@ -2,6 +2,7 @@ package iot.tetracubered.iot.consumers;
 
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.tuples.Tuple2;
 import io.vertx.mutiny.core.eventbus.EventBus;
 import iot.tetracubered.data.entities.Action;
 import iot.tetracubered.data.entities.Device;
@@ -67,29 +68,39 @@ public class DeviceProvisioningConsumer {
 
     private Uni<Device> storeDevice(DeviceProvisioningPayload deviceProvisioningPayload) {
         LOGGER.info("Check if device exists giving CircuitId");
-        return this.deviceRepository.existsByCircuitId(deviceProvisioningPayload.getId())
-                .flatMap(deviceExists -> {
-                    var dbDeviceToStore = Device.generateNewDevice(
-                            deviceProvisioningPayload.getId(),
-                            deviceProvisioningPayload.getName(),
-                            deviceProvisioningPayload.getFeedbackTopic()
-                    );
-                    return !deviceExists
-                            ? this.deviceRepository.storeDevice(dbDeviceToStore)
-                            : this.deviceRepository.updateDevice(deviceProvisioningPayload.getId(), dbDeviceToStore);
-                })
-                .flatMap(device ->
-                        this.storeFeatures(device, deviceProvisioningPayload.getFeatures())
-                );
+        var checkCircuitIdUni = this.deviceRepository.existsByCircuitId(deviceProvisioningPayload.getId());
+        var storedDeviceUni = checkCircuitIdUni.flatMap(deviceExists ->
+                this.upsertDevice(deviceExists, deviceProvisioningPayload)
+        );
+        return storedDeviceUni.flatMap(device ->
+                this.storeFeatures(device, deviceProvisioningPayload.getFeatures())
+        );
+    }
+
+    private Uni<Device> upsertDevice(boolean deviceExists, DeviceProvisioningPayload deviceProvisioningPayload) {
+        var dbDeviceToStore = Device.generateNewDevice(
+                deviceProvisioningPayload.getId(),
+                deviceProvisioningPayload.getName(),
+                deviceProvisioningPayload.getFeedbackTopic()
+        );
+
+        if (deviceExists) {
+            return this.deviceRepository.updateDevice(deviceProvisioningPayload.getId(), dbDeviceToStore);
+        }
+
+        return this.deviceRepository.storeDevice(dbDeviceToStore);
     }
 
     private Uni<Device> storeFeatures(Device device, List<DeviceFeatureProvisioningPayload> featuresPayload) {
         return Multi.createFrom().items(featuresPayload.parallelStream())
-                .call(feature -> {
-                    return this.featureRepository.existsByFeatureId(feature.getFeatureId());
-                })
-                .flatMap(feature -> {
-                    var newFeature =  Feature.generateNewDevice(
+                .flatMap(feature ->
+                        this.featureRepository.existsByFeatureId(feature.getFeatureId())
+                                .map(featureExists -> Tuple2.of(feature, featureExists))
+                                .toMulti()
+                )
+                .flatMap(featureTuple -> {
+                    var feature = featureTuple.getItem1();
+                    var newFeature = Feature.generateNewDevice(
                             feature.getFeatureId(),
                             feature.getName(),
                             feature.getFeatureType(),
@@ -97,10 +108,20 @@ public class DeviceProvisioningConsumer {
                             device
                     );
 
-                    return this.featureRepository.storeFeature(newFeature)
-                            .flatMap(dbFeature -> this.storeAction(dbFeature, feature.getActions()))
+                    var dbFeatureMulti = featureTuple.getItem2()
+                            ? this.featureRepository.updateFeature(newFeature)
+                            .toMulti()
+                            : this.featureRepository.storeFeature(newFeature)
                             .toMulti();
+                    return dbFeatureMulti.map(dbFeature -> Tuple2.of(dbFeature, feature));
                 })
+                .flatMap(featureTuple ->
+                        this.storeAction(
+                                featureTuple.getItem1(),
+                                featureTuple.getItem2().getActions()
+                        )
+                                .toMulti()
+                )
                 .collect().asList()
                 .map(features -> {
                     device.setFeatures(features);

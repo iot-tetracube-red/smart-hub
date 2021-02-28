@@ -29,7 +29,7 @@ public class BotBusinessServices {
 
     @Inject
     ActionRepository actionRepository;
-/*
+
     public Multi<GetDeviceFeatureResponse> getUserDevicesAndFeatures() {
         return this.deviceRepository.getDevices()
                 .flatMap(device ->
@@ -42,7 +42,7 @@ public class BotBusinessServices {
                                 )
                 );
     }
-
+/*
     public Uni<GetCommandsResponse> getCommandsForFeature(String deviceName, String featureName) {
         final var deviceId = new AtomicReference<UUID>();
         final var featureId = new AtomicReference<UUID>();

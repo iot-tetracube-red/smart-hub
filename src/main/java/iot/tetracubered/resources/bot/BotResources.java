@@ -19,9 +19,9 @@ import io.smallrye.mutiny.Multi;
 @OpenAPIDefinition(info = @Info(title = "Bot APIs",
         description = "APIs to serve data to bots middleware", version = "1.0.0"))
 @Tag(name = "Bot", description = "APIs to serve data to bots middleware")
-//@Path("/bot")
+@Path("/bot")
 public class BotResources {
-/*
+
     @Inject
     BotBusinessServices botBusinessServices;
 
@@ -32,7 +32,7 @@ public class BotResources {
     public Multi<GetDeviceFeatureResponse> getFeatures() {
         return this.botBusinessServices.getUserDevicesAndFeatures();
     }
-
+/*
     @Operation(summary = "Get commands of the feature's device")
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "The list of the commands"),
