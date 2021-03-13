@@ -14,6 +14,8 @@ services:
       - 8090:8080
     networks:
       - smart-hub-network
+    environment:
+      - EMQX_ALLOW_ANONYMOUS=false
 
   smart-hub-db:
     image: postgres:latest

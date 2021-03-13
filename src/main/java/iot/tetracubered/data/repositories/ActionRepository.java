@@ -1,28 +1,22 @@
 package iot.tetracubered.data.repositories;
 
 import io.smallrye.mutiny.Uni;
-import io.vertx.mutiny.sqlclient.Tuple;
 import iot.tetracubered.data.entities.Action;
+import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import java.util.UUID;
 
 @ApplicationScoped
-public class ActionRepository extends BaseRepository {
+public class ActionRepository {
+
+    @Inject
+    Mutiny.Session sqlRxSession;
 
     public Uni<Action> storeAction(Action action) {
-        var query = """
-                insert into actions (id, action_id, trigger_topic, name, feature_id) 
-                VALUES ($1, $2, $3, $4, $5)
-                """;
-        var parameters = Tuple.of(
-                action.getId(),
-                action.getActionId(),
-                action.getTriggerTopic(),
-                action.getName(),
-                action.getFeature().getId()
-        );
-        return this.pgPool.preparedQuery(query).execute(parameters)
+        return this.sqlRxSession.persist(action)
+                .call(() -> this.sqlRxSession.flush())
                 .chain(() -> this.findActionByActionId(action.getActionId()));
     }
 
@@ -30,14 +24,12 @@ public class ActionRepository extends BaseRepository {
         var query = """
                 select * 
                 from actions
-                where action_id = $1
+                where action_id = :actionId
                 """;
-        var parameters = Tuple.of(actionId);
-        return this.pgPool.preparedQuery(query).execute(parameters)
-                .stage(rowSetUni -> {
-                    var action = new Action();
-                    return this.mapRowToObject(rowSetUni, action);
-                });
+        return this.sqlRxSession.createNativeQuery(query, Action.class)
+                .setParameter("actionId", actionId)
+                .getSingleResultOrNull()
+                .call(() -> this.sqlRxSession.flush());
     }
 /*
     @Inject
