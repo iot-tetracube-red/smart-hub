@@ -5,7 +5,6 @@ create schema public;
 create table devices
 (
     id             uuid primary key,
-    circuit_id     uuid         not null unique,
     name           varchar(255) not null,
     is_online      boolean      not null default false,
     feedback_topic varchar(255) not null unique,
@@ -16,7 +15,6 @@ create table devices
 create table features
 (
     id                  uuid primary key,
-    feature_id          uuid         not null,
     name                varchar(255) not null,
     feature_type        varchar(255) not null,
     current_value       float        not null,
@@ -30,7 +28,6 @@ create table features
 create table actions
 (
     id            uuid primary key,
-    action_id     uuid unique  not null,
     trigger_topic varchar(255) not null unique,
     name          varchar(255) not null,
     feature_id    uuid         not null references features (id)

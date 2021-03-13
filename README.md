@@ -45,19 +45,34 @@ You can then execute your native executable with: `./build/smart-hub-1.0.0-SNAPS
 
 If you want to learn more about building native executables, please consult https://quarkus.io/guides/gradle-tooling.
 
-## Related guides
+## MQTT Channels
 
-- Eclipse Vert.x ([guide](https://quarkus.io/guides/vertx)): Write reactive applications with the Vert.x API
-- Hibernate Validator ([guide](https://quarkus.io/guides/validation)): Validate object properties (field, getter) and method parameters for your beans (REST, CDI, JPA)
-- SmallRye Reactive Messaging ([guide](https://quarkus.io/guides/reactive-messaging)): Produce and consume messages and implement event driven and data streaming applications
-- SmallRye OpenAPI ([guide](https://quarkus.io/guides/openapi-swaggerui)): Document your REST APIs with OpenAPI - comes with Swagger UI
-- Kotlin ([guide](https://quarkus.io/guides/kotlin)): Write your services in Kotlin
-- Reactive PostgreSQL client ([guide](https://quarkus.io/guides/reactive-sql-clients)): Connect to the PostgreSQL database using the reactive pattern
-
-## Provided examples
-
-### RESTEasy JAX-RS example
-
-REST is easy peasy with this Hello World RESTEasy resource.
-
-[Related guide section...](https://quarkus.io/guides/getting-started#the-jax-rs-resources)
+### Device provisioning payload
+```json
+{
+  "id": "ce694f72-c12b-4e19-aa80-c3af37898615",
+  "name": "Test device",
+  "feedback-topic": "devices/feedback/ce694f72-c12b-4e19-aa80-c3af37898615",
+  "features": [
+    {
+      "id": "3253f251-3ab3-4987-8cdf-aa686de2b52b",
+      "name": "Relay Switch",
+      "feature_type": "SWITCH",
+      "value": 0.0,
+      "default_name": "Switch",
+      "actions": [
+        {
+          "id": "3253f251-3ab3-4987-8cdf-aa686de2b52b",
+          "name": "TURN_ON",
+          "trigger_topic": "devices/ce694f72-c12b-4e19-aa80-c3af37898615/feature/3253f251-3ab3-4987-8cdf-aa686de2b52b"
+        },
+        {
+          "id": "7bb7f58e-68e3-4589-bbaf-e8e23b78e80a",
+          "name": "TURN_OFF",
+          "trigger_topic": "devices/ce694f72-c12b-4e19-aa80-c3af37898615/feature/7bb7f58e-68e3-4589-bbaf-e8e23b78e80a"
+        }
+      ]
+    }
+  ]
+}
+```
