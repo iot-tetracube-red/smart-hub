@@ -9,7 +9,7 @@ data class Device(
     val isOnline: Boolean,
     val feedbackTopic: String,
     val colorCode: String,
-    val feature: Feature? = null,
+    val features: List<Feature>? = null,
 ) {
 
     constructor(row: Row) : this(

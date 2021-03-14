@@ -52,7 +52,7 @@ If you want to learn more about building native executables, please consult http
 {
   "id": "ce694f72-c12b-4e19-aa80-c3af37898615",
   "name": "Test device",
-  "feedback-topic": "devices/feedback/ce694f72-c12b-4e19-aa80-c3af37898615",
+  "feedback_topic": "devices/feedback/ce694f72-c12b-4e19-aa80-c3af37898615",
   "features": [
     {
       "id": "3253f251-3ab3-4987-8cdf-aa686de2b52b",
