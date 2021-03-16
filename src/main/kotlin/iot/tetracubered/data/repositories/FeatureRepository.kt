@@ -1,5 +1,6 @@
 package iot.tetracubered.data.repositories
 
+import io.smallrye.mutiny.Multi
 import io.smallrye.mutiny.Uni
 import io.vertx.mutiny.pgclient.PgPool
 import io.vertx.mutiny.sqlclient.Tuple
@@ -62,5 +63,18 @@ class FeatureRepository(private val pgPool: PgPool) {
         )
         return this.pgPool.preparedQuery(query).execute(params)
             .chain { _ -> this.getFeatureById(feature.id) }
+    }
+
+    fun getDeviceFeatures(deviceId: UUID): Multi<Feature> {
+        val query = """
+           select *
+            from features
+            where device_id = $1
+        """
+        val params = Tuple.of(deviceId)
+        return this.pgPool.preparedQuery(query).execute(params)
+            .onItem()
+            .transformToMulti { rows -> Multi.createFrom().iterable(rows) }
+            .map { row -> Feature(row) }
     }
 }

@@ -1,5 +1,6 @@
 package iot.tetracubered.data.repositories
 
+import io.smallrye.mutiny.Multi
 import io.smallrye.mutiny.Uni
 import io.vertx.mutiny.pgclient.PgPool
 import io.vertx.mutiny.sqlclient.Tuple
@@ -55,5 +56,16 @@ class DeviceRepository(
         return this.pgPool.preparedQuery(query)
             .execute(params)
             .flatMap { _ -> this.getDeviceById(device.id).map { storedDevice -> storedDevice!! } }
+    }
+
+    fun getAllDevices(): Multi<Device> {
+        val query = """
+            select *
+            from devices
+        """
+        return this.pgPool.preparedQuery(query).execute()
+            .onItem()
+            .transformToMulti { rows -> Multi.createFrom().iterable(rows) }
+            .map { row -> Device(row) }
     }
 }
