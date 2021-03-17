@@ -1,5 +1,6 @@
 package iot.tetracubered.data.repositories
 
+import io.smallrye.mutiny.Multi
 import io.smallrye.mutiny.coroutines.awaitSuspending
 import io.vertx.mutiny.pgclient.PgPool
 import io.vertx.mutiny.sqlclient.Row
@@ -52,5 +53,20 @@ class ActionRepository(private val pgPool: PgPool) {
         )
         this.pgPool.preparedQuery(query).execute(params)
         return this.getActionById(action.id)!!
+    }
+
+    suspend fun getFeatureActions(featureId: UUID): List<Action> {
+        val query = """
+            select *
+            from actions
+            where feature_id = $1
+        """
+        val params = Tuple.of(featureId)
+        return this.pgPool.preparedQuery(query).execute(params)
+            .onItem()
+            .transformToMulti { rows -> Multi.createFrom().iterable(rows) }
+            .map { row -> Action(row) }
+            .collect().asList()
+            .awaitSuspending()
     }
 }

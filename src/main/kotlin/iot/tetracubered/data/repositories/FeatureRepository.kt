@@ -80,4 +80,19 @@ class FeatureRepository(private val pgPool: PgPool) {
             .collect().asList()
             .awaitSuspending()
     }
+
+    suspend fun getFeatureByDeviceAndName(deviceId: UUID, name: String): Feature? {
+        val query = """
+           select *
+            from features
+            where device_id = $1 and name = $2
+        """
+        val params = Tuple.of(deviceId, name)
+        val rows = this.pgPool.preparedQuery(query).execute(params).awaitSuspending()
+        val rowIterator = rows.iterator()
+        if (rowIterator.hasNext()) {
+            return Feature(rowIterator.next())
+        }
+        return null
+    }
 }

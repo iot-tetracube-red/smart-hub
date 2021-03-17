@@ -2,6 +2,8 @@ package iot.tetracubered.bot
 
 import io.vertx.core.logging.LoggerFactory
 import iot.tetracubered.bot.payloads.DeviceFeature
+import iot.tetracubered.bot.payloads.DeviceFeatureAction
+import iot.tetracubered.data.repositories.ActionRepository
 import iot.tetracubered.data.repositories.DeviceRepository
 import iot.tetracubered.data.repositories.FeatureRepository
 import javax.enterprise.context.ApplicationScoped
@@ -9,7 +11,8 @@ import javax.enterprise.context.ApplicationScoped
 @ApplicationScoped
 class BotServices(
     private val deviceRepository: DeviceRepository,
-    private val featureRepository: FeatureRepository
+    private val featureRepository: FeatureRepository,
+    private val actionRepository: ActionRepository
 ) {
 
     private val logger = LoggerFactory.getLogger(BotServices::class.java)
@@ -27,5 +30,17 @@ class BotServices(
                 )
             }
         }
+    }
+
+    suspend fun getDeviceFeatureActions(deviceName: String, featureName: String): DeviceFeatureAction? {
+        val device = this.deviceRepository.getDeviceByName(deviceName) ?: return null
+        val feature = this.featureRepository.getFeatureByDeviceAndName(device.id, featureName) ?: return null
+        val actions = this.actionRepository.getFeatureActions(feature.id)
+            .map { action -> action.name }
+        return DeviceFeatureAction(
+            device.name,
+            feature.name,
+            actions
+        )
     }
 }

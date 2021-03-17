@@ -13,6 +13,7 @@ bin/
 *.ipr
 *.iml
 *.iws
+*.json
 
 # NetBeans
 nb-configuration.xml

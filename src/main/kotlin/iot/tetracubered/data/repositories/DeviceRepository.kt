@@ -69,4 +69,19 @@ class DeviceRepository(
             .collect().asList()
             .awaitSuspending()
     }
+
+    suspend fun getDeviceByName(name: String): Device? {
+        val query = """
+           select *
+            from devices
+            where name = $1
+        """
+        val params = Tuple.of(name)
+        val rows = this.pgPool.preparedQuery(query).execute(params).awaitSuspending()
+        val rowIterator = rows.iterator()
+        if (rowIterator.hasNext()) {
+            return Device(rowIterator.next())
+        }
+        return null
+    }
 }
