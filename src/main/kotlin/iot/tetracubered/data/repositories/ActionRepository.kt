@@ -1,6 +1,6 @@
 package iot.tetracubered.data.repositories
 
-import io.smallrye.mutiny.Uni
+import io.smallrye.mutiny.coroutines.awaitSuspending
 import io.vertx.mutiny.pgclient.PgPool
 import io.vertx.mutiny.sqlclient.Row
 import io.vertx.mutiny.sqlclient.Tuple
@@ -11,7 +11,7 @@ import javax.enterprise.context.ApplicationScoped
 @ApplicationScoped
 class ActionRepository(private val pgPool: PgPool) {
 
-    fun getActionById(actionId: UUID): Uni<Action?> {
+    suspend fun getActionById(actionId: UUID): Action? {
         val query = """
             select *
             from actions
@@ -22,9 +22,10 @@ class ActionRepository(private val pgPool: PgPool) {
             .map { rows -> rows.iterator() }
             .map { rowIterator -> if (rowIterator.hasNext()) rowIterator.next() else null }
             .map { row: Row? -> if (row != null) Action(row) else null }
+            .awaitSuspending()
     }
 
-    fun storeAction(action: Action): Uni<Action> {
+    suspend fun storeAction(action: Action): Action {
         val query = """
             insert into actions(id, trigger_topic, name, feature_id) 
             values ($1, $2, $3, $4)
@@ -35,11 +36,11 @@ class ActionRepository(private val pgPool: PgPool) {
             action.name,
             action.featureId
         )
-        return this.pgPool.preparedQuery(query).execute(params)
-            .chain { _ -> this.getActionById(action.id) }
+        this.pgPool.preparedQuery(query).execute(params).awaitSuspending()
+        return this.getActionById(action.id)!!
     }
 
-    fun updateAction(action: Action): Uni<Action> {
+    suspend fun updateAction(action: Action): Action {
         val query = """
            update actions set
             trigger_topic = $1
@@ -49,7 +50,7 @@ class ActionRepository(private val pgPool: PgPool) {
             action.triggerTopic,
             action.id
         )
-        return this.pgPool.preparedQuery(query).execute(params)
-            .chain { _ -> this.getActionById(action.id) }
+        this.pgPool.preparedQuery(query).execute(params)
+        return this.getActionById(action.id)!!
     }
 }

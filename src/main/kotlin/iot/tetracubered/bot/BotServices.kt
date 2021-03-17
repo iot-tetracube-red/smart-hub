@@ -1,7 +1,6 @@
 package iot.tetracubered.bot
 
-import io.smallrye.mutiny.Multi
-import io.smallrye.mutiny.tuples.Tuple2
+import io.vertx.core.logging.LoggerFactory
 import iot.tetracubered.bot.payloads.DeviceFeature
 import iot.tetracubered.data.repositories.DeviceRepository
 import iot.tetracubered.data.repositories.FeatureRepository
@@ -13,19 +12,20 @@ class BotServices(
     private val featureRepository: FeatureRepository
 ) {
 
-    fun getDevices(): Multi<DeviceFeature> {
-        val devicesMulti = this.deviceRepository.getAllDevices()
-        val deviceFeatureTupleMulti = devicesMulti.flatMap { device ->
-            this.featureRepository.getDeviceFeatures(device.id)
-                .map { feature -> Tuple2.of(device, feature) }
-        }
-        return deviceFeatureTupleMulti.map { deviceFeatureTuple ->
-            val device = deviceFeatureTuple.item1
-            val feature = deviceFeatureTuple.item2
-            DeviceFeature(
-                device.name,
-                feature.name
-            )
+    private val logger = LoggerFactory.getLogger(BotServices::class.java)
+
+    suspend fun getDevices(): List<DeviceFeature> {
+        val devices = this.deviceRepository.getAllDevices()
+        logger.info("Found ${devices.count()} devices")
+        return devices.flatMap { device ->
+            val deviceFeatures = this.featureRepository.getDeviceFeatures(device.id)
+            logger.info("Found ${deviceFeatures.count()} for the device ${device.id}")
+            deviceFeatures.map { deviceFeature ->
+                DeviceFeature(
+                    device.name,
+                    deviceFeature.name
+                )
+            }
         }
     }
 }

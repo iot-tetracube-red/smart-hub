@@ -72,6 +72,25 @@ If you want to learn more about building native executables, please consult http
           "trigger_topic": "devices/ce694f72-c12b-4e19-aa80-c3af37898615/feature/7bb7f58e-68e3-4589-bbaf-e8e23b78e80a"
         }
       ]
+    },
+    {
+      "id": "d415ad80-04d4-48a2-b543-090ea7a8d5d0",
+      "name": "Remote",
+      "feature_type": "LONG_PRESS",
+      "value": 0.0,
+      "default_name": "Remote",
+      "actions": [
+        {
+          "id": "dc9f7fce-b8f0-4aef-8713-53208225d0d7",
+          "name": "Music station",
+          "trigger_topic": "devices/d415ad80-04d4-48a2-b543-090ea7a8d5d0/feature/dc9f7fce-b8f0-4aef-8713-53208225d0d7"
+        },
+        {
+          "id": "dcc5d826-f1bf-4fb7-92a8-384bd983a802",
+          "name": "Cinema",
+          "trigger_topic": "devices/d415ad80-04d4-48a2-b543-090ea7a8d5d0/feature/dcc5d826-f1bf-4fb7-92a8-384bd983a802"
+        }
+      ]
     }
   ]
 }

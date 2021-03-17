@@ -1,7 +1,7 @@
 package iot.tetracubered.data.repositories
 
 import io.smallrye.mutiny.Multi
-import io.smallrye.mutiny.Uni
+import io.smallrye.mutiny.coroutines.awaitSuspending
 import io.vertx.mutiny.pgclient.PgPool
 import io.vertx.mutiny.sqlclient.Tuple
 import iot.tetracubered.data.entities.Device
@@ -13,7 +13,7 @@ class DeviceRepository(
     private val pgPool: PgPool
 ) {
 
-    fun getDeviceById(id: UUID): Uni<Device?> {
+    suspend fun getDeviceById(id: UUID): Device? {
         val query = """
             select *
             from devices
@@ -23,11 +23,12 @@ class DeviceRepository(
         return this.pgPool.preparedQuery(query)
             .execute(params)
             .map { rows -> rows.iterator() }
-            .map { rowIterator -> if(rowIterator.hasNext()) rowIterator.next() else null }
+            .map { rowIterator -> if (rowIterator.hasNext()) rowIterator.next() else null }
             .map { row -> if (row != null) Device(row) else null }
+            .awaitSuspending()
     }
 
-    fun storeDevice(device: Device): Uni<Device> {
+    suspend fun storeDevice(device: Device): Device {
         val query = """
             insert into devices (id, name, is_online, feedback_topic, color_code) 
             values ($1, $2, $3, $4, $5)
@@ -39,12 +40,11 @@ class DeviceRepository(
             device.feedbackTopic,
             device.colorCode
         )
-        return this.pgPool.preparedQuery(query)
-            .execute(params)
-            .flatMap { _ -> this.getDeviceById(device.id).map { storedDevice -> storedDevice!! } }
+        this.pgPool.preparedQuery(query).execute(params).awaitSuspending()
+        return this.getDeviceById(device.id)!!
     }
 
-    fun updateDevice(device: Device): Uni<Device> {
+    suspend fun updateDevice(device: Device): Device {
         val query = """
             update devices set feedback_topic = $1, is_online = $2 where id = $3
         """
@@ -53,12 +53,11 @@ class DeviceRepository(
             device.isOnline,
             device.id
         )
-        return this.pgPool.preparedQuery(query)
-            .execute(params)
-            .flatMap { _ -> this.getDeviceById(device.id).map { storedDevice -> storedDevice!! } }
+        this.pgPool.preparedQuery(query).execute(params).awaitSuspending()
+        return this.getDeviceById(device.id)!!
     }
 
-    fun getAllDevices(): Multi<Device> {
+    suspend fun getAllDevices(): List<Device> {
         val query = """
             select *
             from devices
@@ -67,5 +66,7 @@ class DeviceRepository(
             .onItem()
             .transformToMulti { rows -> Multi.createFrom().iterable(rows) }
             .map { row -> Device(row) }
+            .collect().asList()
+            .awaitSuspending()
     }
 }

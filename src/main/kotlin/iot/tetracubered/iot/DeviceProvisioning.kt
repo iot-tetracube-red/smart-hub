@@ -1,8 +1,6 @@
 package iot.tetracubered.iot
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import io.smallrye.mutiny.Multi
-import io.smallrye.mutiny.tuples.Tuple2
 import io.vertx.core.logging.LoggerFactory
 import io.vertx.mutiny.core.eventbus.EventBus
 import iot.tetracubered.data.entities.Action
@@ -14,6 +12,8 @@ import iot.tetracubered.data.repositories.FeatureRepository
 import iot.tetracubered.iot.payloads.DeviceFeatureActionProvisioningPayload
 import iot.tetracubered.iot.payloads.DeviceFeatureProvisioningPayload
 import iot.tetracubered.iot.payloads.DeviceProvisioningPayload
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import org.eclipse.microprofile.reactive.messaging.Incoming
 import javax.enterprise.context.ApplicationScoped
 
@@ -39,104 +39,79 @@ class DeviceProvisioning(
             return
         }
         logger.info("Trying to store device with circuit id: " + deviceProvisioningPayload.id)
-        this.storeDevice(deviceProvisioningPayload)
+        GlobalScope.launch {
+            storeDevice(deviceProvisioningPayload)
+        }
     }
 
-    private fun storeDevice(deviceProvisioningPayload: DeviceProvisioningPayload) {
+    private suspend fun storeDevice(deviceProvisioningPayload: DeviceProvisioningPayload) {
         logger.info("Check if device exists giving CircuitId")
-        this.deviceRepository.getDeviceById(deviceProvisioningPayload.id)
-            .flatMap { dbDevice ->
-                if (dbDevice == null) {
-                    val deviceToStore = Device(
-                        deviceProvisioningPayload.id,
-                        deviceProvisioningPayload.name,
-                        deviceProvisioningPayload.feedbackTopic
+        val dbDevice = this.deviceRepository.getDeviceById(deviceProvisioningPayload.id)
+        val device = if (dbDevice == null) {
+            val deviceToStore = Device(
+                deviceProvisioningPayload.id,
+                deviceProvisioningPayload.name,
+                deviceProvisioningPayload.feedbackTopic
+            )
+            this.deviceRepository.storeDevice(deviceToStore)
+        } else {
+            val updatedDevice = dbDevice.copy(
+                feedbackTopic = deviceProvisioningPayload.feedbackTopic,
+                isOnline = true
+            )
+            this.deviceRepository.updateDevice(updatedDevice)
+        }
+        this.storeFeatures(device, deviceProvisioningPayload.features)
+        logger.info("Device stored with id ${device.id}")
+    }
+
+    private suspend fun storeFeatures(device: Device, featuresToStore: List<DeviceFeatureProvisioningPayload>) {
+        featuresToStore
+            .forEach { feature ->
+                val dbFeature = featureRepository.getFeatureById(feature.featureId)
+                val dbFeatureUpdated = if (dbFeature == null) {
+                    val newFeature = Feature(
+                        id = feature.featureId,
+                        name = feature.name,
+                        featureType = feature.featureType,
+                        currentValue = feature.value,
+                        isRunning = false,
+                        deviceId = device.id
                     )
-                    this.deviceRepository.storeDevice(deviceToStore)
+                    this.featureRepository.storeFeature(newFeature)
                 } else {
-                    val updatedDevice = dbDevice.copy(
-                        feedbackTopic = deviceProvisioningPayload.feedbackTopic,
-                        isOnline = true
+                    val updatedFeature = dbFeature.copy(
+                        featureType = feature.featureType,
+                        currentValue = feature.value,
+                        isRunning = false,
+                        runningReferenceId = null,
+                        sourceType = null
                     )
-                    this.deviceRepository.updateDevice(updatedDevice)
+                    this.featureRepository.updateFeature(updatedFeature)
                 }
-            }
-            .subscribe()
-            .with { device ->
-                this.storeFeatures(device, deviceProvisioningPayload.features)
-                logger.info("Device stored with id ${device.id}")
+                logger.info("Feature id ${dbFeatureUpdated.id} managed correctly")
+                this.storeAction(dbFeatureUpdated, feature.actions)
             }
     }
 
-    private fun storeFeatures(device: Device, featuresToStore: List<DeviceFeatureProvisioningPayload>) {
-        val featuresMulti = Multi.createFrom().items(featuresToStore.parallelStream())
-        val dbFeatureMulti = featuresMulti.flatMap { feature ->
-            this.featureRepository.getFeatureById(feature.featureId)
-                .map { dbFeature -> Tuple2.of(feature, dbFeature) }
-                .toMulti()
-        }
-        val updatedDbFeatureMulti = dbFeatureMulti.flatMap { featureTuple ->
-            val featureProvisioning = featureTuple.item1
-            val dbFeature = featureTuple.item2
-            val dbFeatureUni = if (dbFeature == null) {
-                val newFeature = Feature(
-                    id = featureProvisioning.featureId,
-                    name = featureProvisioning.name,
-                    featureType = featureProvisioning.featureType,
-                    currentValue = featureProvisioning.value,
-                    isRunning = false,
-                    deviceId = device.id
-                )
-                this.featureRepository.storeFeature(newFeature)
-            } else {
-                val updatedFeature = dbFeature.copy(
-                    featureType = featureProvisioning.featureType,
-                    currentValue = featureProvisioning.value,
-                    isRunning = false,
-                    runningReferenceId = null,
-                    sourceType = null
-                )
-                this.featureRepository.updateFeature(updatedFeature)
-            }
-            dbFeatureUni.map { storedFeature -> Tuple2.of(storedFeature, featureProvisioning.actions) }
-                .toMulti()
-        }
-        updatedDbFeatureMulti.subscribe()
-            .with { featureTuple ->
-                logger.info("Feature id ${featureTuple.item1.id} managed correctly")
-                this.storeAction(featureTuple.item1, featureTuple.item2)
-            }
-    }
-
-    private fun storeAction(feature: Feature, actionsToStore: List<DeviceFeatureActionProvisioningPayload>) {
-        val actionToStoreMulti = Multi.createFrom().items(actionsToStore.parallelStream())
-        val dbActionMulti = actionToStoreMulti.flatMap { actionToStore ->
-            this.actionRepository.getActionById(actionToStore.actionId)
-                .map { action -> Tuple2.of(actionToStore, action) }
-                .toMulti()
-        }
-        val updatedDbAction = dbActionMulti.flatMap { actionTuple ->
-            val actionProvisioning = actionTuple.item1
-            val dbAction = actionTuple.item2
-            val dbActionUni = if (dbAction == null) {
-                val actionToStore = Action(
-                    id = actionProvisioning.actionId,
+    private suspend fun storeAction(feature: Feature, actionsToStore: List<DeviceFeatureActionProvisioningPayload>) {
+        actionsToStore.forEach { actionToStore ->
+            val dbAction = this.actionRepository.getActionById(actionToStore.actionId)
+            val updatedDbAction = if (dbAction == null) {
+                val newAction = Action(
+                    id = actionToStore.actionId,
                     featureId = feature.id,
-                    name = actionProvisioning.name,
-                    triggerTopic = actionProvisioning.triggerTopic
+                    name = actionToStore.name,
+                    triggerTopic = actionToStore.triggerTopic
                 )
-                this.actionRepository.storeAction(actionToStore)
+                this.actionRepository.storeAction(newAction)
             } else {
                 val updatedAction = dbAction.copy(
-                    triggerTopic = actionProvisioning.triggerTopic
+                    triggerTopic = actionToStore.triggerTopic
                 )
                 this.actionRepository.updateAction(updatedAction)
             }
-            dbActionUni.toMulti()
+            logger.info("Action id ${updatedDbAction.id} managed correctly")
         }
-        updatedDbAction.subscribe()
-            .with { action ->
-                logger.info("Action id ${action.id} managed correctly")
-            }
     }
 }

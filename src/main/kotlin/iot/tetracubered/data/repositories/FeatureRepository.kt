@@ -1,7 +1,7 @@
 package iot.tetracubered.data.repositories
 
 import io.smallrye.mutiny.Multi
-import io.smallrye.mutiny.Uni
+import io.smallrye.mutiny.coroutines.awaitSuspending
 import io.vertx.mutiny.pgclient.PgPool
 import io.vertx.mutiny.sqlclient.Tuple
 import iot.tetracubered.data.entities.Feature
@@ -11,7 +11,7 @@ import javax.enterprise.context.ApplicationScoped
 @ApplicationScoped
 class FeatureRepository(private val pgPool: PgPool) {
 
-    fun getFeatureById(featureId: UUID): Uni<Feature?> {
+    suspend fun getFeatureById(featureId: UUID): Feature? {
         val query = """
            select *
             from features
@@ -22,9 +22,10 @@ class FeatureRepository(private val pgPool: PgPool) {
             .map { rows -> rows.iterator() }
             .map { rowIterator -> if (rowIterator.hasNext()) rowIterator.next() else null }
             .map { row -> if (row != null) Feature(row) else null }
+            .awaitSuspending()
     }
 
-    fun storeFeature(feature: Feature): Uni<Feature> {
+    suspend fun storeFeature(feature: Feature): Feature {
         val query = """
             insert into features(id, name, feature_type, current_value, is_running, source_type, running_reference_id, device_id) 
             values ($1, $2, $3, $4, $5, $6, $7, $8)
@@ -39,11 +40,11 @@ class FeatureRepository(private val pgPool: PgPool) {
         )
         params.addString(feature.runningReferenceId)
         params.addUUID(feature.deviceId)
-        return this.pgPool.preparedQuery(query).execute(params)
-            .chain { _ -> this.getFeatureById(feature.id) }
+        this.pgPool.preparedQuery(query).execute(params).awaitSuspending()
+        return this.getFeatureById(feature.id)!!
     }
 
-    fun updateFeature(feature: Feature): Uni<Feature> {
+    suspend fun updateFeature(feature: Feature): Feature {
         val query = """
             update features set 
                 current_value = $1,
@@ -61,11 +62,11 @@ class FeatureRepository(private val pgPool: PgPool) {
             feature.sourceType?.name,
             feature.id
         )
-        return this.pgPool.preparedQuery(query).execute(params)
-            .chain { _ -> this.getFeatureById(feature.id) }
+        this.pgPool.preparedQuery(query).execute(params).awaitSuspending()
+        return this.getFeatureById(feature.id)!!
     }
 
-    fun getDeviceFeatures(deviceId: UUID): Multi<Feature> {
+    suspend fun getDeviceFeatures(deviceId: UUID): List<Feature> {
         val query = """
            select *
             from features
@@ -76,5 +77,7 @@ class FeatureRepository(private val pgPool: PgPool) {
             .onItem()
             .transformToMulti { rows -> Multi.createFrom().iterable(rows) }
             .map { row -> Feature(row) }
+            .collect().asList()
+            .awaitSuspending()
     }
 }
