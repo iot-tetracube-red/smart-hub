@@ -7,7 +7,6 @@ If you want to learn more about Quarkus, please visit its website: https://quark
 ## Running the application in dev mode
 
 You can run your application in dev mode that enables live coding using:
-
 ```shell script
 ./gradlew quarkusDev
 ```
@@ -17,16 +16,13 @@ You can run your application in dev mode that enables live coding using:
 ## Packaging and running the application
 
 The application can be packaged using:
-
 ```shell script
 ./gradlew build
 ```
-
-It produces the `quarkus-run.jar` file in the `build/quarkus-app/` directory. Be aware that it’s not an _über-jar_ as
-the dependencies are copied into the `build/quarkus-app/lib/` directory.
+It produces the `quarkus-run.jar` file in the `build/quarkus-app/` directory.
+Be aware that it’s not an _über-jar_ as the dependencies are copied into the `build/quarkus-app/lib/` directory.
 
 If you want to build an _über-jar_, execute the following command:
-
 ```shell script
 ./gradlew build -Dquarkus.package.type=uber-jar
 ```
@@ -35,14 +31,12 @@ The application is now runnable using `java -jar build/quarkus-app/quarkus-run.j
 
 ## Creating a native executable
 
-You can create a native executable using:
-
+You can create a native executable using: 
 ```shell script
 ./gradlew build -Dquarkus.package.type=native
 ```
 
-Or, if you don't have GraalVM installed, you can run the native executable build in a container using:
-
+Or, if you don't have GraalVM installed, you can run the native executable build in a container using: 
 ```shell script
 ./gradlew build -Dquarkus.package.type=native -Dquarkus.native.container-build=true
 ```
@@ -51,54 +45,24 @@ You can then execute your native executable with: `./build/smart-hub-1.0.0-SNAPS
 
 If you want to learn more about building native executables, please consult https://quarkus.io/guides/gradle-tooling.
 
-## MQTT Channels
+## Related guides
 
-### Device provisioning payload
+- YAML Configuration ([guide](https://quarkus.io/guides/config#yaml)): Use YAML to configure your Quarkus application
+- Logging JSON ([guide](https://quarkus.io/guides/logging#json-logging)): Add JSON formatter for console logging
+- Kotlin ([guide](https://quarkus.io/guides/kotlin)): Write your services in Kotlin
 
-```json
-{
-  "id": "ce694f72-c12b-4e19-aa80-c3af37898615",
-  "name": "Test device",
-  "feedback_topic": "devices/feedback/ce694f72-c12b-4e19-aa80-c3af37898615",
-  "features": [
-    {
-      "id": "3253f251-3ab3-4987-8cdf-aa686de2b52b",
-      "name": "Relay Switch",
-      "feature_type": "SWITCH",
-      "value": 0.0,
-      "default_name": "Switch",
-      "actions": [
-        {
-          "id": "3253f251-3ab3-4987-8cdf-aa686de2b52b",
-          "name": "TURN_ON",
-          "trigger_topic": "devices/ce694f72-c12b-4e19-aa80-c3af37898615/feature/3253f251-3ab3-4987-8cdf-aa686de2b52b"
-        },
-        {
-          "id": "7bb7f58e-68e3-4589-bbaf-e8e23b78e80a",
-          "name": "TURN_OFF",
-          "trigger_topic": "devices/ce694f72-c12b-4e19-aa80-c3af37898615/feature/7bb7f58e-68e3-4589-bbaf-e8e23b78e80a"
-        }
-      ]
-    },
-    {
-      "id": "d415ad80-04d4-48a2-b543-090ea7a8d5d0",
-      "name": "Remote",
-      "feature_type": "LONG_PRESS",
-      "value": 0.0,
-      "default_name": "Remote",
-      "actions": [
-        {
-          "id": "dc9f7fce-b8f0-4aef-8713-53208225d0d7",
-          "name": "Music station",
-          "trigger_topic": "devices/d415ad80-04d4-48a2-b543-090ea7a8d5d0/feature/dc9f7fce-b8f0-4aef-8713-53208225d0d7"
-        },
-        {
-          "id": "dcc5d826-f1bf-4fb7-92a8-384bd983a802",
-          "name": "Cinema",
-          "trigger_topic": "devices/d415ad80-04d4-48a2-b543-090ea7a8d5d0/feature/dcc5d826-f1bf-4fb7-92a8-384bd983a802"
-        }
-      ]
-    }
-  ]
-}
-```
+## Provided examples
+
+### YAML Config example
+
+This Supersonic example displays mach speed in your favourite unit, depending on the specified Quarkus configuration.
+
+[Related guide section...](https://quarkus.io/guides/config-reference#configuration-examples)
+
+The Quarkus configuration location is `src/main/resources/application.yml`.
+
+### Logging JSON example
+
+This example let you go faster with your jet aircraft, your speed is logged when you send a new request.<br/> When you reach the speed of sound, a "Sonic Boom" error is going to be thrown and logged. Boom!
+
+[Related guide section...](https://quarkus.io/guides/logging#configuration)
