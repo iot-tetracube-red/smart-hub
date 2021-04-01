@@ -11,12 +11,12 @@ repositories {
 
 dependencies {
     implementation enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}")
+    implementation 'com.hivemq:hivemq-mqtt-client:1.2.1'
     implementation 'io.quarkus:quarkus-mutiny'
     implementation 'io.quarkus:quarkus-jsonb'
     implementation 'io.quarkus:quarkus-container-image-docker'
     implementation 'io.quarkus:quarkus-mongodb-panache'
     implementation 'io.quarkus:quarkus-config-yaml'
-    implementation 'io.quarkus:quarkus-logging-json'
     implementation 'io.quarkus:quarkus-mongodb-panache-kotlin'
     implementation 'io.quarkus:quarkus-resteasy-reactive-jsonb'
     implementation 'io.quarkus:quarkus-mongodb-client'

@@ -9,11 +9,11 @@ import java.util.*
 
 @MongoEntity(collection = "Device")
 data class Device @BsonCreator constructor(
-        @BsonId var id: ObjectId,
-        @BsonProperty("circuit_id") var circuitId: UUID,
+        @BsonId var id: ObjectId? = null,
+        @BsonProperty("circuitId") var circuitId: String,
         @BsonProperty("name") var name: String,
-        @BsonProperty("is_online") var isOnline: Boolean,
-        @BsonProperty("feedback_topic") var feedbackTopic: String,
-        @BsonProperty("color_code") var colorCode: String,
+        @BsonProperty("online") var online: Boolean,
+        @BsonProperty("feedbackTopic") var feedbackTopic: String,
+        @BsonProperty("colorCode") var colorCode: String,
         @BsonProperty("features") var features: List<Feature>
 )
