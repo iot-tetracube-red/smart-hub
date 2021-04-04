@@ -1,17 +1,38 @@
 quarkus:
-  mongodb:
-    connection-string: mongodb://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:27017/${DB_NAME}?authSource=admin
-    database: ${DB_NAME}
   application:
     name: smart-hub
     version: ${SMART_HUB_VERSION}
+  container-image:
+    group: iot-tetracube-red
+    name: smart-hub
+    tag: ${SMART_HUB_VERSION}
+  datasource:
+    db-kind: postgresql
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    reactive:
+      url: postgresql://${DB_HOST}:5432/${DB_NAME}
+  http:
+    # cors: true
+    port: 8080
+    host: 0.0.0.0
+  smallrye-openapi:
+    enable: true
+    path: /docs
+  swagger-ui:
+    enable: true
+    always-include: true
+    path: /docs-ui
+  log:
+    level: INFO
 
 smart-hub:
   iot:
-    client-id: smart-hub
-    host: ${BROKER_HOST}
-    port: ${BROKER_PORT}
-    username: ${BROKER_USERNAME}
-    password: ${BROKER_PASSWORD}
+    broker:
+      host: ${BROKER_HOST}
+      port: ${BROKER_PORT}
+      client-id: smart-hub
+      username: ${BROKER_USER}
+      password: ${BROKER_PASSWORD}
     topics:
       device-provisioning: devices/provisioning
