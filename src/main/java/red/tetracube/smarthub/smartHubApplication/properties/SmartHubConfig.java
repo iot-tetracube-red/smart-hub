@@ -1,4 +1,4 @@
-package red.tetracube.smarthub.configurations.properties;
+package red.tetracube.smarthub.smartHubApplication.properties;
 
 import io.quarkus.arc.config.ConfigProperties;
 import org.eclipse.microprofile.config.inject.ConfigProperty;

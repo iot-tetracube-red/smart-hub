@@ -36,6 +36,6 @@ public class Feature {
     @ManyToOne(fetch = FetchType.LAZY, targetEntity = Device.class)
     private Device device;
 
-    @OneToMany(targetEntity = Action.class, fetch = FetchType.LAZY, mappedBy = "feature")
-    private List<Action> actions = new ArrayList<>();
+//    @OneToMany(targetEntity = Action.class, fetch = FetchType.LAZY, mappedBy = "feature")
+  //  private List<Action> actions = new ArrayList<>();
 }

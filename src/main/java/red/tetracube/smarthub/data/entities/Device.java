@@ -24,6 +24,6 @@ public class Device {
     @Column(name = "color_code", nullable = false)
     private String colorCode;
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "device", targetEntity = Feature.class)
-    private List<Feature> features = new ArrayList<>();
+  //  @OneToMany(fetch = FetchType.LAZY, mappedBy = "device", targetEntity = Feature.class)
+  //  private List<Feature> features = new ArrayList<>();
 }
