@@ -4,7 +4,7 @@ smart-hub:
       client-id: ${BROKER_CLIENT_ID}
       host: ${BROKER_HOST}
       port: ${BROKER_PORT}
-      username: ${BROKER_USERNAME}
+      username: ${BROKER_USER}
       password: ${BROKER_PASSWORD}
     topics:
       device-provisioning: devices/provisioning
