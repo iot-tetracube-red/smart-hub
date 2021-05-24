@@ -1,4 +1,4 @@
-# code-with-quarkus project
+# Smart Hub project
 
 This project uses Quarkus, the Supersonic Subatomic Java Framework.
 
@@ -19,15 +19,15 @@ The application can be packaged using:
 ```shell script
 ./mvnw package
 ```
-It produces the `quarkus-run.jar` file in the `target/quarkus-app/` directory.
-Be aware that it’s not an _über-jar_ as the dependencies are copied into the `target/quarkus-app/lib/` directory.
+It produces the `quarkus-run.jar` file in the `target/smart-hub/` directory.
+Be aware that it’s not an _über-jar_ as the dependencies are copied into the `target/smart-hub/lib/` directory.
 
 If you want to build an _über-jar_, execute the following command:
 ```shell script
 ./mvnw package -Dquarkus.package.type=uber-jar
 ```
 
-The application is now runnable using `java -jar target/quarkus-app/quarkus-run.jar`.
+The application is now runnable using `java -jar target/smart-hub/quarkus-run.jar`.
 
 ## Creating a native executable
 
@@ -41,7 +41,7 @@ Or, if you don't have GraalVM installed, you can run the native executable build
 ./mvnw package -Pnative -Dquarkus.native.container-build=true
 ```
 
-You can then execute your native executable with: `./target/code-with-quarkus-1.0.0-SNAPSHOT-runner`
+You can then execute your native executable with: `./target/smart-hub-1.0.0-SNAPSHOT-runner`
 
 If you want to learn more about building native executables, please consult https://quarkus.io/guides/maven-tooling.html.
 
