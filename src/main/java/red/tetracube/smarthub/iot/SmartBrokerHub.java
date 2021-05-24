@@ -4,6 +4,7 @@ import com.hivemq.client.mqtt.datatypes.MqttQos;
 import com.hivemq.client.mqtt.mqtt5.Mqtt5AsyncClient;
 import com.hivemq.client.mqtt.mqtt5.Mqtt5Client;
 import com.hivemq.client.mqtt.mqtt5.message.auth.Mqtt5SimpleAuth;
+import io.vertx.mutiny.core.eventbus.EventBus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import red.tetracube.smarthub.properties.SmartHubConfig;
@@ -21,6 +22,9 @@ public class SmartBrokerHub {
 
     @Inject
     SmartHubConfig smartHubConfig;
+
+    @Inject
+    EventBus eventBus;
 
     private Mqtt5AsyncClient mqttClient;
 
@@ -55,7 +59,7 @@ public class SmartBrokerHub {
                                 if (exception != null) {
                                     LOGGER.warn("Cannot connect to MQTT broker, the cloud will not receive or send messages with devices");
                                 } else {
-                                    LOGGER.info("Connected with MQTT broker ${connectionAck.reasonCode}");
+                                    LOGGER.info("Connected with MQTT broker {}", connectionAck.getReasonCode());
                                     subscribeTopics();
                                 }
                             });
@@ -68,8 +72,8 @@ public class SmartBrokerHub {
                 .topicFilter(smartHubConfig.iot().topics().deviceProvisioning())
                 .qos(MqttQos.EXACTLY_ONCE)
                 .callback(publish -> {
-                    LOGGER.debug("Received message ${String(publish.payloadAsBytes)} from the topic ${publish.topic}");
-                    // eventBus.sendAndForget("device-provisioning", publish.getPayloadAsBytes())
+                    LOGGER.debug("Received message {} from the topic {}", new String(publish.getPayloadAsBytes()), publish.getTopic());
+                    eventBus.sendAndForget("device-provisioning", publish.getPayloadAsBytes());
                 })
                 .send();
     }
