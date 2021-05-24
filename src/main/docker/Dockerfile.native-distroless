@@ -3,19 +3,19 @@
 #
 # Before building the container image run:
 #
-# ./gradlew build -Dquarkus.package.type=native
+# ./mvnw package -Pnative
 #
 # Then, build the image with:
 #
-# docker build -f src/main/docker/Dockerfile.native-distroless -t quarkus/smart-hub .
+# docker build -f src/main/docker/Dockerfile.native-distroless -t quarkus/code-with-quarkus .
 #
 # Then run the container using:
 #
-# docker run -i --rm -p 8080:8080 quarkus/smart-hub
+# docker run -i --rm -p 8080:8080 quarkus/code-with-quarkus
 #
 ###
 FROM quay.io/quarkus/quarkus-distroless-image:1.0
-COPY build/*-runner /application
+COPY target/*-runner /application
 
 EXPOSE 8080
 USER nonroot
