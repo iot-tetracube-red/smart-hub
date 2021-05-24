@@ -4,24 +4,24 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
+import org.graalvm.collections.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import red.tetracube.smarthub.data.entities.Action;
 import red.tetracube.smarthub.data.entities.Device;
 import red.tetracube.smarthub.data.entities.Feature;
+import red.tetracube.smarthub.data.repositories.ActionRepository;
 import red.tetracube.smarthub.data.repositories.DeviceRepository;
 import red.tetracube.smarthub.data.repositories.FeatureRepository;
-import red.tetracube.smarthub.enumerations.FeatureType;
-import red.tetracube.smarthub.enumerations.RequestSourceType;
+import red.tetracube.smarthub.iot.payloads.ActionProvisioning;
 import red.tetracube.smarthub.iot.payloads.DeviceProvisioning;
 import red.tetracube.smarthub.iot.payloads.FeatureProvisioning;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.time.LocalDateTime;
-import java.util.Calendar;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 @ApplicationScoped
 public class DeviceProvisioningService {
@@ -34,6 +34,9 @@ public class DeviceProvisioningService {
 
     @Inject
     FeatureRepository featureRepository;
+
+    @Inject
+    ActionRepository actionRepository;
 
     private final static Logger LOGGER = LoggerFactory.getLogger(DeviceProvisioningService.class);
 
@@ -100,13 +103,46 @@ public class DeviceProvisioningService {
                                     device.getId()
                             )
                     )
+                            .map(dbFeature -> Pair.create(dbFeature, feature))
                             .toMulti();
                 })
                 .invoke(optionalFeature -> {
-                    LOGGER.info("Something went wrong during feature persisting into database, sending negative feedback to device");
+                    if (optionalFeature.getLeft().isEmpty()) {
+                        LOGGER.info("Something went wrong during feature persisting into database, sending negative feedback to device");
+                    } else {
+                        LOGGER.info("Feature with id {} is managed correctly", optionalFeature.getLeft().get().getId());
+                    }
+                })
+                .filter(featurePair -> featurePair.getLeft().isPresent())
+                .map(featurePair -> Pair.create(featurePair.getLeft().get(), featurePair.getRight()))
+                .call(featurePair -> manageActionProvisioning(featurePair.getLeft(), featurePair.getRight().actions()))
+                .map(Pair::getLeft)
+                .collect().asList();
+    }
+
+    private Uni<List<Action>> manageActionProvisioning(Feature feature, List<ActionProvisioning> actions) {
+        return Multi.createFrom().items(actions.parallelStream())
+                .flatMap(action ->
+                        actionRepository.insertOrUpdateAction(
+                                new Action(
+                                        action.id(),
+                                        action.name(),
+                                        action.triggerTopic(),
+                                        feature.getId()
+                                )
+                        )
+                                .toMulti()
+                )
+                .invoke(optionalAction -> {
+                    if (optionalAction.isEmpty()) {
+                        LOGGER.info("Something went wrong during action persisting into database, sending negative feedback to device");
+                    } else {
+                        LOGGER.info("Action id {} managed correctly", optionalAction.get().getId());
+                    }
                 })
                 .filter(Optional::isPresent)
                 .map(Optional::get)
-                .collect().asList();
+                .collect()
+                .asList();
     }
 }

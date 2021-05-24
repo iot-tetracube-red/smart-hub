@@ -38,10 +38,10 @@ public class FeatureRepository {
         parameters = parameters.addUUID(feature.getDeviceId());
         return pgPool.preparedQuery(query)
                 .execute(parameters)
-                .flatMap(ignored -> getDeviceById(feature.getId()));
+                .flatMap(ignored -> getFeatureById(feature.getId()));
     }
 
-    public Uni<Optional<Feature>> getDeviceById(UUID id) {
+    public Uni<Optional<Feature>> getFeatureById(UUID id) {
         return pgPool.preparedQuery("""
                 select id, name, feature_type, is_running, source_type, running_reference_id, device_id
                 from features
