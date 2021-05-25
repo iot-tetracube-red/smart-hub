@@ -3,15 +3,14 @@ package red.tetracube.smarthub.data.repositories;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.pgclient.PgPool;
+import io.vertx.mutiny.sqlclient.Row;
+import io.vertx.mutiny.sqlclient.RowSet;
 import io.vertx.mutiny.sqlclient.Tuple;
 import red.tetracube.smarthub.annotations.processors.EntityProcessor;
 import red.tetracube.smarthub.data.entities.Device;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.StreamSupport;
@@ -53,19 +52,7 @@ public class DeviceRepository {
                 where id = $1
                 """)
                 .execute(Tuple.of(id))
-                .map(rows -> {
-                    var rowsIterator = rows.iterator();
-                    if (!rowsIterator.hasNext()) {
-                        return Optional.empty();
-                    }
-                    var row = rowsIterator.next();
-                    try {
-                        var deviceEntity = entityProcessor.mapTableToEntity(new Device(), row);
-                        return Optional.of(deviceEntity);
-                    } catch (IllegalAccessException e) {
-                        return Optional.empty();
-                    }
-                });
+                .map(this::mapSingleRow);
     }
 
     public Multi<Device> getDevices() {
@@ -83,5 +70,29 @@ public class DeviceRepository {
                         return null;
                     }
                 });
+    }
+
+    public Uni<Optional<Device>> getDeviceByName(String deviceName) {
+        return pgPool.preparedQuery("""
+                select id, name, is_online, feedback_topic, color_code, created_at, updated_at
+                from devices
+                where name = $1
+                """)
+                .execute(Tuple.of(deviceName))
+                .map(this::mapSingleRow);
+    }
+
+    private Optional<Device> mapSingleRow(RowSet<Row> rows) {
+        var rowsIterator = rows.iterator();
+        if (!rowsIterator.hasNext()) {
+            return Optional.empty();
+        }
+        var row = rowsIterator.next();
+        try {
+            var deviceEntity = entityProcessor.mapTableToEntity(new Device(), row);
+            return Optional.of(deviceEntity);
+        } catch (IllegalAccessException e) {
+            return Optional.empty();
+        }
     }
 }

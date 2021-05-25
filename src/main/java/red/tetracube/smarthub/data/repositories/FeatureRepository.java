@@ -3,9 +3,10 @@ package red.tetracube.smarthub.data.repositories;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.pgclient.PgPool;
+import io.vertx.mutiny.sqlclient.Row;
+import io.vertx.mutiny.sqlclient.RowSet;
 import io.vertx.mutiny.sqlclient.Tuple;
 import red.tetracube.smarthub.annotations.processors.EntityProcessor;
-import red.tetracube.smarthub.data.entities.Device;
 import red.tetracube.smarthub.data.entities.Feature;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -51,19 +52,7 @@ public class FeatureRepository {
                 where id = $1
                 """)
                 .execute(Tuple.of(id))
-                .map(rows -> {
-                    var rowsIterator = rows.iterator();
-                    if (!rowsIterator.hasNext()) {
-                        return Optional.empty();
-                    }
-                    var row = rowsIterator.next();
-                    try {
-                        var featureEntity = entityProcessor.mapTableToEntity(new Feature(), row);
-                        return Optional.of(featureEntity);
-                    } catch (IllegalAccessException e) {
-                        return Optional.empty();
-                    }
-                });
+                .map(this::mapSingleRow);
     }
 
     public Multi<Feature> getFeaturesByDevice(UUID deviceId) {
@@ -82,5 +71,29 @@ public class FeatureRepository {
                         return null;
                     }
                 });
+    }
+
+    public Uni<Optional<Feature>> getFeatureByDeviceAndName(UUID deviceId, String featureName) {
+        return pgPool.preparedQuery("""
+                select id, name, feature_type, is_running, source_type, running_reference_id, device_id
+                from features
+                where device_id = $1 and name = $2
+                """)
+                .execute(Tuple.of(deviceId, featureName))
+                .map(this::mapSingleRow);
+    }
+
+    private Optional<Feature> mapSingleRow(RowSet<Row> rows) {
+        var rowsIterator = rows.iterator();
+        if (!rowsIterator.hasNext()) {
+            return Optional.empty();
+        }
+        var row = rowsIterator.next();
+        try {
+            var featureEntity = entityProcessor.mapTableToEntity(new Feature(), row);
+            return Optional.of(featureEntity);
+        } catch (IllegalAccessException e) {
+            return Optional.empty();
+        }
     }
 }
