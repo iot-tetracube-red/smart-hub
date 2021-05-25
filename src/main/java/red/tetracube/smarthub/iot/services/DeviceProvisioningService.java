@@ -16,6 +16,7 @@ import red.tetracube.smarthub.data.repositories.FeatureRepository;
 import red.tetracube.smarthub.iot.payloads.ActionProvisioning;
 import red.tetracube.smarthub.iot.payloads.DeviceProvisioning;
 import red.tetracube.smarthub.iot.payloads.FeatureProvisioning;
+import red.tetracube.smarthub.services.TelemetryService;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -37,6 +38,9 @@ public class DeviceProvisioningService {
 
     @Inject
     ActionRepository actionRepository;
+
+    @Inject
+    TelemetryService telemetryService;
 
     private final static Logger LOGGER = LoggerFactory.getLogger(DeviceProvisioningService.class);
 
@@ -114,8 +118,12 @@ public class DeviceProvisioningService {
                     }
                 })
                 .filter(featurePair -> featurePair.getLeft().isPresent())
-                .map(featurePair -> Pair.create(featurePair.getLeft().get(), featurePair.getRight()))
+                .map(featurePair -> {
+                    assert featurePair.getLeft().isPresent();
+                    return Pair.create(featurePair.getLeft().get(), featurePair.getRight());
+                })
                 .call(featurePair -> manageActionProvisioning(featurePair.getLeft(), featurePair.getRight().actions()))
+                .call(featurePair -> telemetryService.storeTelemetryData(featurePair.getLeft().getId(), featurePair.getRight().value(), LocalDateTime.now()))
                 .map(Pair::getLeft)
                 .collect().asList();
     }
