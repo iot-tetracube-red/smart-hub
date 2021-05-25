@@ -1,5 +1,6 @@
 package red.tetracube.smarthub.data.repositories;
 
+import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.pgclient.PgPool;
 import io.vertx.mutiny.sqlclient.Tuple;
@@ -13,6 +14,7 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.StreamSupport;
 
 @ApplicationScoped
 public class DeviceRepository {
@@ -62,6 +64,23 @@ public class DeviceRepository {
                         return Optional.of(deviceEntity);
                     } catch (IllegalAccessException e) {
                         return Optional.empty();
+                    }
+                });
+    }
+
+    public Multi<Device> getDevices() {
+        return pgPool.preparedQuery("""
+                select id, name, is_online, feedback_topic, color_code, created_at, updated_at
+                from devices
+                """)
+                .execute()
+                .onItem()
+                .transformToMulti(rows -> Multi.createFrom().items(() -> StreamSupport.stream(rows.spliterator(), false)))
+                .map(row -> {
+                    try {
+                        return entityProcessor.mapTableToEntity(new Device(), row);
+                    } catch (IllegalAccessException e) {
+                        return null;
                     }
                 });
     }

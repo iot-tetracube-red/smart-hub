@@ -1,54 +1,99 @@
-# Smart Hub project
+# The tetracube's IoT Smart Hub project
 
-This project uses Quarkus, the Supersonic Subatomic Java Framework.
+This project represents the service, where all appliances that compound
+a smart-home, can connect to be used via cloud services such as
+Alexa Skill or Telegram Bot.
 
-If you want to learn more about Quarkus, please visit its website: https://quarkus.io/ .
+## Project structure
+The project is based on a broker and an application server built on Quarkus.
+
+The folder src/main/docker is the root folder of containers files, here you can find
+two of docker-compose files: one of development environment and another one for production.
+Beside the docker-compose there is an example of dot-env file
+used to compile the images of PostgreSQL and RabbitMQ.<br/>
+The *iot-broker* folder contains RabbitMQ custom image built to activate MQTT plugin.
+
+## Topic description
+
+### Device provisioning
+When a device is turned on, for the first time or not, registers itself to the hub with the message where is reported
+its circuit id, a default name and a list of actions that are embeded in the devices.
+
+* Topic: `devices/provisioning`
+```json
+{
+  "circuit_id": "uuid string",
+  "default_name": "default device name",
+  "actions": [
+    {
+      "id": "uuid string",
+      "name": "action name",
+      "type": "action type compatible with ActionTimeEnum"
+    } 
+  ]
+}
+```
+
+Example of message
+```json
+{
+  "circuit_id": "09543601-23ee-4d3b-a3a5-527b3a6a8386",
+  "default_name": "Multimedia",
+  "actions": [
+    {
+      "id": "7e0d7f80-0eef-4d4f-b47c-ab886ca05126",
+      "name": "Turn on",
+      "type": "BUTTON"
+    },
+    {
+      "id": "457aad22-9659-4239-ad26-7f84472c16e7",
+      "name": "Turn off",
+      "type": "BUTTON"
+    } 
+  ]
+}
+```
 
 ## Running the application in dev mode
 
 You can run your application in dev mode that enables live coding using:
 ```shell script
-./mvnw compile quarkus:dev
+./gradlew quarkusDev
 ```
-
-> **_NOTE:_**  Quarkus now ships with a Dev UI, which is available in dev mode only at http://localhost:8080/q/dev/.
 
 ## Packaging and running the application
 
 The application can be packaged using:
 ```shell script
-./mvnw package
+./gradlew build
 ```
-It produces the `quarkus-run.jar` file in the `target/smart-hub/` directory.
-Be aware that it’s not an _über-jar_ as the dependencies are copied into the `target/smart-hub/lib/` directory.
+It produces the `smart-hub-1.0.0-SNAPSHOT-runner.jar` file in the `/build` directory.
+Be aware that it’s not an _über-jar_ as the dependencies are copied into the `build/lib` directory.
 
 If you want to build an _über-jar_, execute the following command:
 ```shell script
-./mvnw package -Dquarkus.package.type=uber-jar
+./gradlew build -Dquarkus.package.type=uber-jar
 ```
 
-The application is now runnable using `java -jar target/smart-hub/quarkus-run.jar`.
+The application is now runnable using `java -jar build/smart-hub-1.0.0-SNAPSHOT-runner.jar`.
 
 ## Creating a native executable
 
-You can create a native executable using: 
+You can create a native executable using:
 ```shell script
-./mvnw package -Pnative
+./gradlew build -Dquarkus.package.type=native
 ```
 
-Or, if you don't have GraalVM installed, you can run the native executable build in a container using: 
+Or, if you don't have GraalVM installed, you can run the native executable build in a container using:
 ```shell script
-./mvnw package -Pnative -Dquarkus.native.container-build=true
+./gradlew build -Dquarkus.package.type=native -Dquarkus.native.container-build=true
 ```
 
-You can then execute your native executable with: `./target/smart-hub-1.0.0-SNAPSHOT-runner`
+You can then execute your native executable with: `./build/smart-hub-1.0.0-SNAPSHOT-runner`
 
-If you want to learn more about building native executables, please consult https://quarkus.io/guides/maven-tooling.html.
+If you want to learn more about building native executables, please consult https://quarkus.io/guides/gradle-tooling.
 
-## Provided examples
+# RESTEasy JAX-RS
 
-### RESTEasy JAX-RS example
+Guide: https://quarkus.io/guides/rest-json
 
-REST is easy peasy with this Hello World RESTEasy resource.
-
-[Related guide section...](https://quarkus.io/guides/getting-started#the-jax-rs-resources)

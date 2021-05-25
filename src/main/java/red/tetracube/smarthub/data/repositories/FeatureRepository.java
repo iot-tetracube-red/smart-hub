@@ -1,15 +1,18 @@
 package red.tetracube.smarthub.data.repositories;
 
+import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.pgclient.PgPool;
 import io.vertx.mutiny.sqlclient.Tuple;
 import red.tetracube.smarthub.annotations.processors.EntityProcessor;
+import red.tetracube.smarthub.data.entities.Device;
 import red.tetracube.smarthub.data.entities.Feature;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.StreamSupport;
 
 @ApplicationScoped
 public class FeatureRepository {
@@ -59,6 +62,24 @@ public class FeatureRepository {
                         return Optional.of(featureEntity);
                     } catch (IllegalAccessException e) {
                         return Optional.empty();
+                    }
+                });
+    }
+
+    public Multi<Feature> getFeaturesByDevice(UUID deviceId) {
+        return pgPool.preparedQuery("""
+                select id, name, feature_type, is_running, source_type, running_reference_id, device_id
+                from features
+                where device_id = $1
+                """)
+                .execute(Tuple.of(deviceId))
+                .onItem()
+                .transformToMulti(rows -> Multi.createFrom().items(() -> StreamSupport.stream(rows.spliterator(), false)))
+                .map(row -> {
+                    try {
+                        return entityProcessor.mapTableToEntity(new Feature(), row);
+                    } catch (IllegalAccessException e) {
+                        return null;
                     }
                 });
     }
