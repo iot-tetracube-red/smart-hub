@@ -3,6 +3,8 @@ package red.tetracube.smarthub.data.repositories;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.pgclient.PgPool;
+import io.vertx.mutiny.sqlclient.Row;
+import io.vertx.mutiny.sqlclient.RowSet;
 import io.vertx.mutiny.sqlclient.Tuple;
 import red.tetracube.smarthub.annotations.processors.EntityProcessor;
 import red.tetracube.smarthub.data.entities.Action;
@@ -48,19 +50,7 @@ public class ActionRepository {
                 where id = $1
                 """)
                 .execute(Tuple.of(id))
-                .map(rows -> {
-                    var rowsIterator = rows.iterator();
-                    if (!rowsIterator.hasNext()) {
-                        return Optional.empty();
-                    }
-                    var row = rowsIterator.next();
-                    try {
-                        var featureEntity = entityProcessor.mapTableToEntity(new Action(), row);
-                        return Optional.of(featureEntity);
-                    } catch (IllegalAccessException e) {
-                        return Optional.empty();
-                    }
-                });
+                .map(this::mapSingleRow);
     }
 
     public Multi<Action> getFeatureActions(UUID featureId) {
@@ -79,5 +69,29 @@ public class ActionRepository {
                         return null;
                     }
                 });
+    }
+
+    public Uni<Optional<Action>> getActionByNameAndFeatureId(UUID featureId, String actionName) {
+        return pgPool.preparedQuery("""
+                select id, name, trigger_topic, feature_id
+                from actions
+                where feature_id = $1 and name = $2
+                """)
+                .execute(Tuple.of(featureId, actionName))
+                .map(this::mapSingleRow);
+    }
+
+    private Optional<Action> mapSingleRow(RowSet<Row> rows) {
+        var rowsIterator = rows.iterator();
+        if (!rowsIterator.hasNext()) {
+            return Optional.empty();
+        }
+        var row = rowsIterator.next();
+        try {
+            var featureEntity = entityProcessor.mapTableToEntity(new Action(), row);
+            return Optional.of(featureEntity);
+        } catch (IllegalAccessException e) {
+            return Optional.empty();
+        }
     }
 }

@@ -5,10 +5,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import red.tetracube.smarthub.controllers.bot.payloads.BotDeviceFeatureItem;
 import red.tetracube.smarthub.controllers.bot.payloads.DeviceFeatureAction;
+import red.tetracube.smarthub.controllers.bot.payloads.TriggerFeatureActionRequest;
 import red.tetracube.smarthub.data.entities.Action;
 import red.tetracube.smarthub.data.repositories.ActionRepository;
 import red.tetracube.smarthub.data.repositories.DeviceRepository;
 import red.tetracube.smarthub.data.repositories.FeatureRepository;
+import red.tetracube.smarthub.enumerations.TriggerActionResult;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -77,6 +79,41 @@ public class BotService {
                                         actions
                                 ));
                                 return deviceFeatureActionsUni.map(Optional::of);
+                            });
+                });
+    }
+
+    public Uni<TriggerActionResult> triggerFeatureAction(TriggerFeatureActionRequest triggerFeatureActionRequest) {
+        LOGGER.info("Searching for device with name \"{}\"", triggerFeatureActionRequest.deviceName());
+        return deviceRepository.getDeviceByName(triggerFeatureActionRequest.deviceName())
+                .flatMap(optionalDevice -> {
+                    if (optionalDevice.isEmpty()) {
+                        LOGGER.warn("No device found with given name \"{}\"", triggerFeatureActionRequest.deviceName());
+                        return Uni.createFrom().item(TriggerActionResult.ACTION_NOT_FOUND);
+                    } else if (!optionalDevice.get().isOnline()) {
+                        LOGGER.warn("The device \"{}\" is offline", triggerFeatureActionRequest.deviceName());
+                        return Uni.createFrom().item(TriggerActionResult.DEVICE_OFFLINE);
+                    }
+                    LOGGER.info("Found device id \"{}\"", optionalDevice.get().getId());
+
+                    LOGGER.info("Searching for related feature name \"{}\"", triggerFeatureActionRequest.featureName());
+                    return featureRepository.getFeatureByDeviceAndName(optionalDevice.get().getId(), triggerFeatureActionRequest.featureName())
+                            .flatMap(optionalFeature -> {
+                                if (optionalFeature.isEmpty()) {
+                                    LOGGER.warn("Not found, cannot trigger any action");
+                                    return Uni.createFrom().item(TriggerActionResult.ACTION_NOT_FOUND);
+                                }
+
+                                LOGGER.info("Found, now searching for action");
+                                return actionRepository.getActionByNameAndFeatureId(optionalFeature.get().getId(), triggerFeatureActionRequest.commandName())
+                                        .map(optionalAction -> {
+                                            if (optionalAction.isEmpty()) {
+                                                LOGGER.warn("Cannot find any action with given name \"{}\"", triggerFeatureActionRequest.commandName());
+                                                return TriggerActionResult.ACTION_NOT_FOUND;
+                                            }
+                                            LOGGER.info("Triggering command \"{}\"", triggerFeatureActionRequest.commandName());
+                                            return TriggerActionResult.OK;
+                                        });
                             });
                 });
     }
