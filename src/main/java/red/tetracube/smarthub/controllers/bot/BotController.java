@@ -11,7 +11,7 @@ import java.util.List;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
-@Path("/api/bot")
+@Path("/bot")
 public class BotController {
 
     @Inject
