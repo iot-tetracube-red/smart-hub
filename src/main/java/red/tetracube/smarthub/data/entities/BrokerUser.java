@@ -9,17 +9,17 @@ public class BrokerUser {
     private String password;
     private String salt;
 
-    public BrokerUser(Long id,
-                      boolean isSuperUser,
-                      String clientId,
+    public static BrokerUser getNewUser(String clientId,
                       String username,
                       String password) {
-        this.id = id;
-        this.isSuperUser = isSuperUser;
-        this.clientId = clientId;
-        this.username = username;
-        this.password = password;
-        this.salt = null;
+        var brokerUser = new BrokerUser();
+        brokerUser.id = 0L;
+        brokerUser.isSuperUser = false;
+        brokerUser.clientId = clientId;
+        brokerUser.username = username;
+        brokerUser.password = password;
+        brokerUser.salt = null;
+        return brokerUser;
     }
 
     public Long getId() {

@@ -4,9 +4,13 @@ import com.hivemq.client.mqtt.datatypes.MqttQos;
 import com.hivemq.client.mqtt.mqtt5.Mqtt5AsyncClient;
 import com.hivemq.client.mqtt.mqtt5.Mqtt5Client;
 import com.hivemq.client.mqtt.mqtt5.message.auth.Mqtt5SimpleAuth;
+import io.quarkus.vertx.ConsumeEvent;
+import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.core.eventbus.EventBus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import red.tetracube.smarthub.iot.dto.ActionTriggerMessage;
+import red.tetracube.smarthub.iot.services.TriggerActionDataService;
 import red.tetracube.smarthub.properties.SmartHubConfig;
 import red.tetracube.smarthub.services.BrokerUserManager;
 
@@ -22,6 +26,9 @@ public class SmartBrokerHub {
 
     @Inject
     SmartHubConfig smartHubConfig;
+
+    @Inject
+    TriggerActionDataService triggerActionDataService;
 
     @Inject
     EventBus eventBus;
@@ -76,5 +83,28 @@ public class SmartBrokerHub {
                     eventBus.sendAndForget("device-provisioning", publish.getPayloadAsBytes());
                 })
                 .send();
+    }
+
+    @ConsumeEvent("trigger-action")
+    public Uni<Boolean> triggerAction(ActionTriggerMessage actionTriggerMessage) {
+        LOGGER.info("Triggering action {} from {} with id {}",
+                actionTriggerMessage.actionName(),
+                actionTriggerMessage.sourceType(),
+                actionTriggerMessage.sourceId());
+        var mqttPublisher = mqttClient.publishWith()
+                .topic(actionTriggerMessage.topic())
+                .payload(actionTriggerMessage.actionName().getBytes(StandardCharsets.UTF_8))
+                .qos(MqttQos.EXACTLY_ONCE)
+                .send();
+       return Uni.createFrom()
+               .completionStage(mqttPublisher)
+               .flatMap(mqtt5PublishResult -> {
+                   if (mqtt5PublishResult.getError().isPresent()) {
+                       LOGGER.warn("Cannot trigger the action as requested due: {}", mqtt5PublishResult.getError().get().getMessage());
+                       return Uni.createFrom().item(false);
+                   } else {
+                       return triggerActionDataService.storeTrigger(actionTriggerMessage);
+                   }
+               });
     }
 }

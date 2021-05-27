@@ -1,6 +1,7 @@
 package red.tetracube.smarthub.controllers.bot;
 
 import io.smallrye.mutiny.Uni;
+import io.vertx.mutiny.core.eventbus.EventBus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import red.tetracube.smarthub.controllers.bot.payloads.BotDeviceFeatureItem;
@@ -11,6 +12,7 @@ import red.tetracube.smarthub.data.repositories.ActionRepository;
 import red.tetracube.smarthub.data.repositories.DeviceRepository;
 import red.tetracube.smarthub.data.repositories.FeatureRepository;
 import red.tetracube.smarthub.enumerations.TriggerActionResult;
+import red.tetracube.smarthub.iot.dto.ActionTriggerMessage;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -28,6 +30,9 @@ public class BotService {
 
     @Inject
     ActionRepository actionRepository;
+
+    @Inject
+    EventBus eventBus;
 
     private final static Logger LOGGER = LoggerFactory.getLogger(BotService.class);
 
@@ -106,13 +111,27 @@ public class BotService {
 
                                 LOGGER.info("Found, now searching for action");
                                 return actionRepository.getActionByNameAndFeatureId(optionalFeature.get().getId(), triggerFeatureActionRequest.commandName())
-                                        .map(optionalAction -> {
+                                        .flatMap(optionalAction -> {
                                             if (optionalAction.isEmpty()) {
                                                 LOGGER.warn("Cannot find any action with given name \"{}\"", triggerFeatureActionRequest.commandName());
-                                                return TriggerActionResult.ACTION_NOT_FOUND;
+                                                return Uni.createFrom().item(TriggerActionResult.ACTION_NOT_FOUND);
                                             }
                                             LOGGER.info("Triggering command \"{}\"", triggerFeatureActionRequest.commandName());
-                                            return TriggerActionResult.OK;
+                                            return eventBus.<Boolean>request(
+                                                    "trigger-action",
+                                                    new ActionTriggerMessage(
+                                                            optionalAction.get().getId(),
+                                                            optionalAction.get().getName(),
+                                                            optionalAction.get().getTriggerTopic(),
+                                                            triggerFeatureActionRequest.source(),
+                                                            triggerFeatureActionRequest.referenceId(),
+                                                            optionalFeature.get().getId()
+                                                    )
+                                            )
+                                            .map(returnMessage -> returnMessage.body()
+                                                    ? TriggerActionResult.OK
+                                                    : TriggerActionResult.DEVICE_OFFLINE
+                                            );
                                         });
                             });
                 });

@@ -92,4 +92,20 @@ public class Feature {
     public List<Telemetry> getTelemetryData() {
         return telemetryData;
     }
+
+    public void setFeatureType(FeatureType featureType) {
+        this.featureType = featureType;
+    }
+
+    public void setRunning(Boolean running) {
+        isRunning = running;
+    }
+
+    public void setSourceType(RequestSourceType sourceType) {
+        this.sourceType = sourceType;
+    }
+
+    public void setRunningReferenceId(String runningReferenceId) {
+        this.runningReferenceId = runningReferenceId;
+    }
 }

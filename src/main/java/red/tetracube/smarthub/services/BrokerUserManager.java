@@ -25,9 +25,7 @@ public class BrokerUserManager {
                             if (brokerUserExists) {
                                 return Uni.createFrom().voidItem();
                             }
-                            var brokerUser = new BrokerUser(
-                                    0L,
-                                    false,
+                            var brokerUser = BrokerUser.getNewUser(
                                     clientId,
                                     username,
                                     encodedPassword
