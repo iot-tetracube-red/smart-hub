@@ -1,4 +1,3 @@
-
 quarkus:
   application:
     name: smart-hub
@@ -24,3 +23,10 @@ mp:
           title: Smart Hub API
           version: ${SMART_HUB_VERSION}
           description: Smart Hub API to check or interact with your smart home devices
+"%dev":
+  mp:
+    openapi:
+      extensions:
+        smallrye:
+          info:
+            title: Smart Hub API (development)
