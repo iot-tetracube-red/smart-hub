@@ -48,5 +48,4 @@ If you want to learn more about building native executables, please consult http
 ## Related guides
 
 - YAML Configuration ([guide](https://quarkus.io/guides/config#yaml)): Use YAML to configure your Quarkus application
-- Kotlin ([guide](https://quarkus.io/guides/kotlin)): Write your services in Kotlin
 
