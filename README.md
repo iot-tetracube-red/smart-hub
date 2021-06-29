@@ -47,5 +47,11 @@ If you want to learn more about building native executables, please consult http
 
 ## Related guides
 
-- YAML Configuration ([guide](https://quarkus.io/guides/config#yaml)): Use YAML to configure your Quarkus application
 
+## Provided examples
+
+### RESTEasy Reactive example
+
+Rest is easy peasy & reactive with this Hello World RESTEasy Reactive resource.
+
+[Related guide section...](https://quarkus.io/guides/getting-started-reactive#reactive-jax-rs-resources)
